@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>마켓 대시보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@700;900&display=swap">
+<style>
+:root{
+  --bg:#f4f1ea;--paper:#fbf9f4;--ink:#141414;--sub:#5e5a50;--muted:#8a8577;--line:#d9d4c7;--soft:#e9e5da;
+  --blue:#2a45d8;--green:#0b7a46;--red:#d4302b;--amber:#a86a00;
+  --pblue:#e3e8fb;--pred:#fbe2df;--pgreen:#dcf1e5;--pamber:#fbefd2;
+  --sans:'Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+  --serif:'Noto Serif KR','Batang',serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16161a;--paper:#1d1d22;--ink:#ecebe6;--sub:#b4b0a5;--muted:#8a8679;--line:#34343b;--soft:#2a2a31;
+    --blue:#7d93ff;--green:#4cc38a;--red:#ff7a70;--amber:#e6b450;
+    --pblue:#252c4d;--pred:#47231f;--pgreen:#1d3a2c;--pamber:#3d321b;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16161a;--paper:#1d1d22;--ink:#ecebe6;--sub:#b4b0a5;--muted:#8a8679;--line:#34343b;--soft:#2a2a31;
+  --blue:#7d93ff;--green:#4cc38a;--red:#ff7a70;--amber:#e6b450;
+  --pblue:#252c4d;--pred:#47231f;--pgreen:#1d3a2c;--pamber:#3d321b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+a{color:inherit}
+header.top{border-bottom:4px solid var(--ink);padding:40px 0 18px}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.16em;color:var(--blue);text-transform:uppercase}
+h1{font-family:var(--serif);font-weight:900;font-size:clamp(34px,6vw,56px);line-height:1.1;margin-top:6px}
+.top-meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-end;margin-top:14px}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+nav a{font-size:14px;font-weight:700;text-decoration:none;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--paper)}
+nav a:hover{border-color:var(--ink)}
+.updated{font-size:13px;color:var(--muted)}
+section{padding:44px 0 8px}
+h2{font-family:var(--serif);font-weight:900;font-size:clamp(26px,4vw,36px);line-height:1.2}
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--ink);padding-bottom:12px;margin-bottom:20px}
+.sec-note{font-size:13px;color:var(--sub)}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:20px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:16px}
+@media (max-width:820px){.grid2{grid-template-columns:minmax(0,1fr)}}
+/* 점수 */
+.score-box{display:flex;flex-direction:column;justify-content:space-between;gap:18px}
+.score-label{font-size:14px;font-weight:700;color:var(--sub)}
+.score-num{font-family:var(--serif);font-weight:900;font-size:clamp(72px,14vw,112px);line-height:1;letter-spacing:-.02em}
+.score-num small{font-family:var(--sans);font-size:22px;color:var(--muted);font-weight:500;margin-left:4px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;padding:6px 12px;border-radius:999px}
+.pill.hot{background:var(--pred);color:var(--red)}
+.pill.warm{background:var(--pamber);color:var(--amber)}
+.pill.calm{background:var(--soft);color:var(--sub)}
+.meter{position:relative;height:12px;border-radius:6px;background:linear-gradient(90deg,var(--soft) 0%,var(--soft) 70%,var(--pamber) 70%,var(--pamber) 90%,var(--pred) 90%)}
+.meter i{position:absolute;top:-5px;width:4px;height:22px;background:var(--ink);border-radius:2px;transform:translateX(-2px)}
+.meter-scale{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.fact{background:var(--soft);border-radius:10px;padding:10px 12px}
+.fact b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+.fact span{font-size:12px;color:var(--sub)}
+/* 표 */
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{font-size:12px;color:var(--sub);font-weight:700;text-align:right;padding:8px 6px;border-bottom:1px solid var(--ink)}
+td{padding:10px 6px;border-bottom:1px solid var(--line);text-align:right;font-size:15px}
+th:first-child,td:first-child{text-align:left}
+td .bar{display:inline-block;width:64px;height:6px;background:var(--soft);vertical-align:middle;margin-left:8px;border-radius:3px;overflow:hidden}
+td .bar span{display:block;height:100%;background:var(--blue)}
+.na{color:var(--muted)}
+.table-scroll{overflow-x:auto}
+.rate{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-size:14px;color:var(--sub);margin-top:14px}
+.ok{color:var(--green);font-weight:700}.no{color:var(--red);font-weight:700}
+svg text{font-family:var(--sans)}
+.chart-wrap{margin-top:16px}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--sub);margin-bottom:6px;flex-wrap:wrap}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+/* 스크리너 */
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:700px){.cards{grid-template-columns:minmax(0,1fr)}}
+.cards a{display:block;text-decoration:none;background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.cards a:hover{border-color:var(--ink)}
+.cards img{display:block;width:100%;height:auto;aspect-ratio:16/9;background:var(--soft)}
+.cards .cap{display:flex;justify-content:space-between;font-size:14px;font-weight:700;padding:10px 12px}
+.cards .cap span{font-weight:400;color:var(--muted);font-size:12px}
+.notice{background:var(--pamber);color:var(--ink);border-radius:10px;padding:12px 14px;font-size:14px;margin-bottom:16px}
+.stale{color:var(--red);font-weight:700}
+/* 연구 */
+.findings{display:grid;gap:12px}
+.finding{display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px}
+.finding .n{font-family:var(--serif);font-weight:900;font-size:28px;color:var(--blue);line-height:1.1}
+.finding h3{font-size:17px}
+.finding p{font-size:15px;color:var(--sub)}
+footer{border-top:1px solid var(--line);margin-top:48px;padding:20px 0 40px;font-size:13px;color:var(--muted)}
+.empty{color:var(--muted);font-size:14px;padding:12px 0}
+.zones{display:grid;gap:12px;margin-top:12px}
+.zones div{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;align-items:center}
+.zones .pill{justify-content:center}
+.zones p{font-size:14px;color:var(--sub)}
+.tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.tabs button{font:inherit;font-size:15px;font-weight:700;cursor:pointer;padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:var(--paper);color:var(--ink);display:flex;gap:10px;align-items:center}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tabs button b{font-variant-numeric:tabular-nums;font-size:14px;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--ink)}
+.tabs button b.hot{background:var(--pred);color:var(--red)}
+.idx-note:not(:empty){margin-top:14px;background:var(--pamber);border-radius:10px;padding:10px 12px;font-size:14px}
+.heat-card{margin-top:16px}
+.heat-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px}
+.heat-val{font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;white-space:nowrap}
+.heat-val small{font-size:15px;font-weight:700;margin-left:8px;padding:4px 10px;border-radius:999px}
+.heat-val small.normal{background:var(--pblue);color:var(--blue)}
+.heat-val small.warn{background:var(--pamber);color:var(--amber)}
+.heat-val small.hot{background:var(--pred);color:var(--red)}
+.heat-val small.unknown{background:var(--soft);color:var(--sub)}
+.heat-bar{position:relative;height:14px;border-radius:7px;background:var(--soft);overflow:visible}
+.heat-fill{height:100%;border-radius:7px;background:var(--blue);width:0;transition:width .4s}
+.heat-fill.warn{background:var(--amber)}.heat-fill.hot{background:var(--red)}
+.heat-bar .tick{position:absolute;top:-4px;width:2px;height:22px;background:var(--ink);opacity:.35}
+.heat-scale{position:relative;height:18px;font-size:12px;color:var(--muted);margin-top:6px}
+.heat-scale span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.heat-scale span:first-child{left:0;transform:none}
+.heat-scale span:last-child{transform:translateX(-100%)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Market Dashboard</div>
+    <h1>마켓 대시보드</h1>
+    <div class="top-meta">
+      <nav>
+        <a href="#singularity">매력 지수</a>
+        <a href="#screener">주도섹터 스크리너</a>
+        <a href="#research">연구 기록</a>
+      </nav>
+      <div class="updated" id="updated">불러오는 중…</div>
+    </div>
+  </header>
+
+  <!-- ── 매력 지수 ── -->
+  <section id="singularity">
+    <div class="sec-head">
+      <h2>매력 지수</h2>
+      <div class="sec-note" id="sg-date"></div>
+    </div>
+    <div class="tabs" id="sg-tabs" role="tablist"></div>
+    <div class="grid2">
+      <div class="card score-box">
+        <div>
+          <div class="score-label" id="sg-label">오늘 점수</div>
+          <div class="score-num" id="sg-score">–<small>/100</small></div>
+          <div id="sg-pill" style="margin-top:10px"></div>
+        </div>
+        <div>
+          <div class="meter"><i id="sg-mark" style="left:0%"></i></div>
+          <div class="meter-scale"><span>0</span><span>70</span><span>90</span><span>100</span></div>
+        </div>
+        <div class="facts" id="sg-facts"></div>
+      </div>
+      <div class="card">
+        <div class="score-label">점수 읽는 법</div>
+        <div class="zones">
+          <div><span class="pill hot">90 이상</span><p>매력 구간. 시장 공포와 가격 하락이 동시에 크게 나타난 상태</p></div>
+          <div><span class="pill warm">70 ~ 90</span><p>공포가 커지는 중. 매력 구간에 가까워지는 단계</p></div>
+          <div><span class="pill calm">70 미만</span><p>보통 또는 과열. 특별한 신호 없음</p></div>
+        </div>
+        <div class="idx-note" id="sg-note"></div>
+        <p class="sec-note" style="margin-top:14px">여러 시장 지표를 0~100점으로 환산해 가중 평균한 자체 지수예요. 구성 지표와 기준값은 공개하지 않아요.</p>
+      </div>
+    </div>
+
+    <div class="card heat-card">
+      <div class="heat-head">
+        <div><div class="score-label">과열 온도계</div><div class="sec-note">매력 지수는 바닥 쪽, 온도계는 고점 쪽을 봐요</div></div>
+        <div class="heat-val" id="ht-val">–</div>
+      </div>
+      <div class="heat-bar"><div class="heat-fill" id="ht-fill"></div><i class="tick" style="left:70%"></i><i class="tick" style="left:80%"></i></div>
+      <div class="heat-scale"><span>0</span><span style="left:70%">70 주의</span><span style="left:80%">80 과열</span><span style="left:100%">100</span></div>
+      <p class="sec-note" style="margin-top:12px">70 이상이면 이후 1년 수익률이 평균보다 낮았고, 80 이상이면 크게 나빠졌던 구간이에요. 고점을 짚는 신호는 아니에요. 과열 상태로 몇 달 더 오른 경우도 많았어요.</p>
+    </div>
+
+    <div class="card chart-wrap">
+      <div class="score-label">최근 1년 점수 추이</div>
+      <div class="legend"><span><i style="background:var(--blue)"></i>매력 지수</span><span><i style="background:var(--red);height:2px"></i>90점</span></div>
+      <div id="sg-chart"></div>
+    </div>
+  </section>
+
+  <!-- ── 스크리너 ── -->
+  <section id="screener">
+    <div class="sec-head">
+      <h2>주도섹터 스크리너</h2>
+      <div class="sec-note" id="sc-date"></div>
+    </div>
+    <div class="notice"><b>시장 현황판이에요, 매수 신호가 아니에요.</b> 시점별 S&amp;P 500 구성 종목으로 백테스트한 결과 이 조건들은 동일비중 매수보다 나은 성과를 보이지 못했어요. 아래 연구 기록 참고.</div>
+    <div class="cards" id="sc-cards"><div class="empty">불러오는 중…</div></div>
+  </section>
+
+  <!-- ── 연구 기록 ── -->
+  <section id="research">
+    <div class="sec-head">
+      <h2>연구 기록</h2>
+      <div class="sec-note">스크리너 조건 백테스트 · 2016~2022</div>
+    </div>
+    <div class="card findings">
+      <div class="finding"><div class="n">1</div><div><h3>처음 결과: 추세 추종 조건이 동일비중보다 연 10%p 우위</h3><p>현재 S&amp;P 500 종목으로 10년 백테스트. 리밸런싱 날짜 5가지 모두에서 동일비중 매수를 앞섰어요 (CAGR 26.3% vs 16.5%).</p></div></div>
+      <div class="finding"><div class="n">2</div><div><h3>날짜 바꾸기·시장 필터 실험</h3><p>다른 조건들은 리밸런싱 날짜만 바꿔도 결과가 크게 흔들렸고, 시장 하락 필터는 2020년 V자 반등을 놓쳐 오히려 성과를 낮췄어요.</p></div></div>
+      <div class="finding"><div class="n">3</div><div><h3>시점별 구성 종목으로 다시 검증 → 우위 사라짐</h3><p>그 날짜에 실제 S&amp;P 500에 있던 종목만 쓰자 CAGR이 5.0%로 떨어져 동일비중(12.1%)에 못 미쳤어요. 크게 오른 뒤 지수에 편입된 종목을 편입 전에 미리 고르던 생존 편향이 우위의 대부분이었어요. 데이터 오염 여부도 따로 점검했어요 (의심 데이터 2% 미만).</p></div></div>
+      <div class="finding"><div class="n">4</div><div><h3>결론</h3><p>검증된 전략 없음. 스크리너는 시장 현황 참고용으로만 사용. 검증 틀(앞·뒤 기간 분리, 합격 기준 사전 설정, 날짜 바꾸기)은 다음 연구에 재사용.</p></div></div>
+    </div>
+  </section>
+
+  <footer>
+    투자 권유가 아닌 개인 연구용 페이지입니다. 데이터: Yahoo Finance, SEC EDGAR 외 · 매일 미국장 마감 후 자동 갱신
+    <div id="build-info" style="margin-top:6px"></div>
+  </footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmt = (v, d = 1) => v == null ? '—' : Number(v).toFixed(d);
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+async function getJSON(url) {
+  try { const r = await fetch(url, {cache: 'no-store'}); return r.ok ? await r.json() : null; } catch { return null; }
+}
+
+function historyChart(hist, threshold) {
+  const W = 1000, H = 300, L = 44, Rm = 16, T = 14, B = 30, iw = W - L - Rm, ih = H - T - B;
+  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, width: '100%', role: 'img', 'aria-label': '최근 1년 매력 지수 추이'});
+  if (!hist.some(h => h.score != null)) return svg;
+  const x = i => L + i / (hist.length - 1) * iw;
+  const y = v => T + (1 - v / 100) * ih;
+  [0, 25, 50, 75, 100].forEach(v => {
+    el('line', {x1: L, x2: L + iw, y1: y(v), y2: y(v), stroke: css('--line'), 'stroke-width': 1}, svg);
+    const t = el('text', {x: L - 8, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 12, fill: css('--muted')}, svg); t.textContent = v;
+  });
+  el('rect', {x: L, y: y(100), width: iw, height: y(threshold) - y(100), fill: css('--pred'), 'fill-opacity': .6}, svg);
+  el('line', {x1: L, x2: L + iw, y1: y(threshold), y2: y(threshold), stroke: css('--red'), 'stroke-width': 1.5, 'stroke-dasharray': '6 4'}, svg);
+  let d = '', pen = false;
+  hist.forEach((h, i) => { if (h.score == null) { pen = false; return; } d += `${pen ? 'L' : 'M'}${x(i).toFixed(1)},${y(h.score).toFixed(1)}`; pen = true; });
+  el('path', {d, fill: 'none', stroke: css('--blue'), 'stroke-width': 2.2, 'stroke-linejoin': 'round'}, svg);
+  hist.forEach((h, i) => { if (h.score != null && h.score >= threshold) el('circle', {cx: x(i), cy: y(h.score), r: 3, fill: css('--red')}, svg); });
+  const months = {}; hist.forEach((h, i) => { const m = h.date.slice(0, 7); if (!(m in months)) months[m] = i; });
+  Object.entries(months).forEach(([m, i], k) => {
+    if (k % 2) return;
+    const t = el('text', {x: x(i), y: H - 8, 'text-anchor': 'middle', 'font-size': 12, fill: css('--muted')}, svg);
+    t.textContent = m.slice(2).replace('-', '.');
+  });
+  const tip = el('g', {visibility: 'hidden'}, svg);
+  const vline = el('line', {y1: T, y2: T + ih, stroke: css('--ink'), 'stroke-width': 1, 'stroke-opacity': .4}, tip);
+  const box = el('rect', {width: 150, height: 30, rx: 6, fill: css('--paper'), stroke: css('--line')}, tip);
+  const t1 = el('text', {'font-size': 13, 'font-weight': 700, fill: css('--ink')}, tip);
+  const hit = el('rect', {x: L, y: T, width: iw, height: ih, fill: 'transparent'}, svg);
+  hit.addEventListener('pointermove', ev => {
+    const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) / r.width * W;
+    const i = Math.max(0, Math.min(hist.length - 1, Math.round((px - L) / iw * (hist.length - 1)))), h = hist[i];
+    const xx = x(i), bx = xx + 160 > W ? xx - 160 : xx + 10;
+    vline.setAttribute('x1', xx); vline.setAttribute('x2', xx);
+    box.setAttribute('x', bx); box.setAttribute('y', T + 4);
+    t1.setAttribute('x', bx + 10); t1.setAttribute('y', T + 24); t1.textContent = `${h.date} · ${fmt(h.score)}점`;
+    tip.setAttribute('visibility', 'visible');
+  });
+  hit.addEventListener('pointerleave', () => tip.setAttribute('visibility', 'hidden'));
+  return svg;
+}
+
+let SG = null;
+function zoneOf(x) {
+  if (x.score == null) return ['calm', '데이터 없음'];
+  return x.score >= x.threshold ? ['hot', '● 매력 구간 (90+)'] : x.score >= 70 ? ['warm', '공포 구간 · 90점 미만'] : ['calm', '보통'];
+}
+function renderSingularity(s, stale) {
+  if (!s || !s.indexes || !s.indexes.length) { $('sg-pill').innerHTML = '<span class="pill calm">데이터 없음</span>'; return; }
+  SG = s;
+  const tabs = $('sg-tabs');
+  tabs.innerHTML = s.indexes.map(x => {
+    const hot = x.score != null && x.score >= x.threshold;
+    return `<button role="tab" data-key="${x.key}" aria-selected="false">${x.name.replace(" 매력 지수", "")}<b class="${hot ? 'hot' : ''}">${fmt(x.score)}</b></button>`;
+  }).join('');
+  tabs.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => showIndex(btn.dataset.key, true)));
+  let start = s.indexes[0].key;
+  try { const saved = localStorage.getItem('sg-tab'); if (s.indexes.some(x => x.key === saved)) start = saved; } catch {}
+  const hash = location.hash.replace('#', '');
+  if (s.indexes.some(x => x.key === hash)) start = hash;
+  showIndex(start, false, stale);
+}
+function showIndex(key, remember, stale) {
+  const x = SG.indexes.find(i => i.key === key) || SG.indexes[0];
+  if (remember) { try { localStorage.setItem('sg-tab', x.key); } catch {} }
+  $('sg-tabs').querySelectorAll('button').forEach(b => b.setAttribute('aria-selected', b.dataset.key === x.key));
+  $('sg-date').innerHTML = `${x.date} 미국장 종가 기준${SG.demo ? ' · 데모 데이터' : ''}` +
+    (stale ? ' · <span class="stale">오늘 갱신 실패, 이전 결과 표시 중</span>' : '');
+  $('sg-label').textContent = `${x.name} · 오늘 점수 (${x.threshold}점 이상 = 매력 구간)`;
+  $('sg-score').innerHTML = `${fmt(x.score)}<small>/100</small>`;
+  const [cls, label] = zoneOf(x);
+  $('sg-pill').innerHTML = `<span class="pill ${cls}">${label}</span>` + (x.partial ? ' <span class="pill calm">일부 지표 없이 계산</span>' : '');
+  $('sg-mark').style.left = Math.min(100, Math.max(0, x.score || 0)) + '%';
+  const sc = x.history.filter(h => h.score != null);
+  const prev = sc.length > 1 ? sc[sc.length - 2].score : null;
+  const wk = sc.length > 5 ? sc[sc.length - 6].score : null;
+  const days = sc.filter(h => h.score >= x.threshold).length;
+  const chg = v => v == null || x.score == null ? '—' : (x.score - v >= 0 ? '+' : '') + (x.score - v).toFixed(1);
+  $('sg-facts').innerHTML = [['전일 대비', chg(prev)], ['1주 전 대비', chg(wk)],
+    ['1년 최고', sc.length ? fmt(Math.max(...sc.map(h => h.score))) : '—'], ['1년 중 90점 이상', days + '일']]
+    .map(([k, v]) => `<div class="fact"><b>${v}</b><span>${k}</span></div>`).join('');
+  $('sg-note').textContent = x.note || '';
+  const h = x.heat;
+  if (h) {
+    $('ht-val').innerHTML = `${fmt(h.value)}<small class="${h.zone}">${h.label}</small>`;
+    const f = $('ht-fill'); f.className = 'heat-fill ' + h.zone; f.style.width = Math.min(100, Math.max(0, h.value || 0)) + '%';
+  }
+  $('sg-chart').replaceChildren(historyChart(x.history, x.threshold));
+}
+
+function renderScreener(m) {
+  if (!m || !m.cards || !m.cards.length) { $('sc-cards').innerHTML = '<div class="empty">아직 스크리너 결과가 없어요.</div>'; return; }
+  $('sc-date').innerHTML = `${m.date} 미국장 종가 기준${m.stale ? ' · <span class="stale">오늘 갱신 실패, 이전 결과 표시 중</span>' : ''}`;
+  $('sc-cards').innerHTML = m.cards.map(c =>
+    `<a href="data/screener/${c.file}" target="_blank" rel="noopener"><img src="data/screener/${c.file}" alt="${c.title}" loading="lazy"><div class="cap">${c.title}<span>크게 보기 ↗</span></div></a>`
+  ).join('');
+}
+
+(async () => {
+  const [s, m, b] = await Promise.all([getJSON('data/singularity.json'), getJSON('data/screener/manifest.json'), getJSON('data/build.json')]);
+  renderSingularity(s, b && b.singularity_stale);
+  renderScreener(m);
+  $('updated').textContent = b ? `마지막 갱신 ${b.built}` : '';
+})();
+</script>
+</body>
+</html>
