@@ -7,7 +7,7 @@
   var GROUPS = [
     ["실매매 현황", [["index.html", "실매매 현황"]]],
     ["시장", [["market.html", "시장"], ["score.html", "매력 점수"], ["stocks.html", "개별주"]]],
-    ["AI", [["ai.html", "미장 AI"], ["kr.html", "국장 AI"], ["wyckoff.html", "와이코프"]]],
+    ["AI", [["ai.html", "미장 AI"], ["kr.html", "국장 AI"], ["wyckoff.html", "와이코프"], ["bot.html", "봇 장부"]]],
     ["퇴근 후 5분", [["five.html", "퇴근 후 5분"]]]
   ];
 

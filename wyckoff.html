@@ -59,7 +59,7 @@
 <section class="sec" id="out" aria-live="polite" hidden></section>
 
 <section class="rules" aria-label="유의사항">
-  <div><b>규칙으로 계산한 값이에요</b><span>레벨은 앞뒤 10일 중 최고·최저인 과거 고가·저가를 3% 안끼리 묶은 가격대, 빗각은 최근 150일 최고점과 그 뒤 낮은 고점을 이은 선이에요. 사람이 긋는 선과 다를 수 있어요.</span></div>
+  <div><b>규칙으로 계산한 값이에요</b><span>레벨은 앞뒤 10일 중 최고·최저인 과거 고가·저가를 3% 안끼리 묶은 가격대, 빗각은 「빗각 파이널 v2」 방식으로 왼쪽 50일 최고 고점에서 그 뒤 낮은 고점을 이은 선(사이 고가가 선을 넘지 않은 가장 오래된 것)이에요. 사람이 긋는 선과 다를 수 있어요.</span></div>
   <div><b>백테스트 근거</b><span>미장(S&amp;P500 2003~2026)에서 "지지 유지 + 빗각 돌파 + 거래량 → 눌림 반등 매수"가 효과 있었어요. 국장은 2010년 이후 약했어요.</span></div>
   <div><b>판단과 책임은 본인에게</b><span>투자 권유가 아닌 참고용 분석이에요.</span></div>
 </section>
@@ -162,7 +162,7 @@
       (f.lows_rising ? "해마다 저점이 높아지는 중." : f.lows_falling ? "해마다 저점이 낮아지는 중." : "저점은 일정하지 않음.") +
       " 200일선 " + (f.above_ma200 ? "위" : "아래") + ", 52주 고점 대비 " + MD.pct(f.from_52w_high_pct) + ".";
 
-    var tlTxt = !tl ? '<p class="note">최근 150일 안에 내려오는 빗각이 없어요.</p>' :
+    var tlTxt = !tl ? '<p class="note">지금 살아 있는 하락 빗각이 없어요 (최근 60일 안 돌파도 없음).</p>' :
       "<p>" + MD.md(tl.from) + " 고점 " + money(tl.from_price, cur) + "에서 내려오는 선, 오늘 " + money(tl.line_today, cur) + ". 지금 가격은 선 " + (tl.above ? "위" : "아래") + " (" + MD.pct(tl.dist_pct) + ")." +
       (tl.breakout_date ? " <b>" + MD.md(tl.breakout_date) + " 돌파</b>." : "") + " 고점→바닥 하락 " + tl.drop_pct + "%.</p>";
 
