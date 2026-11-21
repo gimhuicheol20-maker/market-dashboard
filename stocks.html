@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>개별주 · 시스템 트레이딩</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@700;900&display=swap">
+<style>
+/* 마켓 대시보드와 같은 색·글꼴 */
+:root{
+  --bg:#f4f1ea;--panel:#fbf9f4;--ink:#141414;--muted:#5e5a50;--line:#d9d4c7;
+  --accent:#2a45d8;--accent-soft:#e3e8fb;
+  --good:#0b7a46;--good-bg:#dcf1e5;--warn:#a86a00;--warn-bg:#fbefd2;--bad:#d4302b;--bad-bg:#fbe2df;
+  --price:#141414;--scorefill:rgba(42,69,216,.16);
+  --sans:'Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+  --serif:'Noto Serif KR','Batang',serif;
+  --mono:'Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16161a;--panel:#1d1d22;--ink:#ecebe6;--muted:#b4b0a5;--line:#34343b;
+    --accent:#7d93ff;--accent-soft:#252c4d;
+    --good:#4cc38a;--good-bg:#1d3a2c;--warn:#e6b450;--warn-bg:#3d321b;--bad:#ff7a70;--bad-bg:#47231f;
+    --price:#ecebe6;--scorefill:rgba(125,147,255,.2);color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16161a;--panel:#1d1d22;--ink:#ecebe6;--muted:#b4b0a5;--line:#34343b;
+  --accent:#7d93ff;--accent-soft:#252c4d;
+  --good:#4cc38a;--good-bg:#1d3a2c;--warn:#e6b450;--warn-bg:#3d321b;--bad:#ff7a70;--bad-bg:#47231f;
+  --price:#ecebe6;--scorefill:rgba(125,147,255,.2);color-scheme:dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 48px; }
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 20px; }
+.wrap > *, .card > *, .head > *, .states > * { min-width: 0; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+h1 { font-size: 1.6rem; margin: 0; letter-spacing: -.01em; text-wrap: balance; }
+h2 { font-size: 1.05rem; margin: 0; }
+.muted { color: var(--muted); }
+
+.market { display: inline-flex; gap: 8px; align-items: center; padding: 6px 12px; border-radius: 999px; font-weight: 600; font-size: .88rem; border: 1px solid var(--line); background: var(--panel); }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.market.up .dot { background: var(--good); } .market.down .dot { background: var(--bad); }
+
+.search { position: relative; }
+.search input { width: 100%; font: inherit; font-size: 1.05rem; padding: 14px 16px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--panel); color: var(--ink); }
+.search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.sugg { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 4px); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+.sugg button { display: flex; width: 100%; gap: 12px; align-items: center; padding: 10px 14px; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.sugg button:hover, .sugg button.on { background: var(--accent-soft); }
+.sugg .tk { font-family: var(--mono); font-weight: 600; width: 64px; flex: none; }
+.sugg .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hint { font-size: .85rem; color: var(--muted); margin-top: 6px; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: grid; gap: 20px; }
+.head { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 16px 24px; align-items: start; }
+.head .id .tk { font-family: var(--mono); font-size: .9rem; color: var(--muted); }
+.head .id h2 { font-size: 1.5rem; margin-top: 2px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chip { font-size: .8rem; padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--ink); white-space: nowrap; }
+.grade { font-weight: 600; }
+.g-A { background: var(--good-bg); color: var(--good); } .g-B { background: var(--warn-bg); color: var(--warn); } .g-C { background: var(--bad-bg); color: var(--bad); }
+.g-N { background: var(--accent-soft); color: var(--muted); }
+
+.gauge { text-align: right; }
+.gauge .big { font-family: var(--mono); font-size: 3.2rem; font-weight: 600; line-height: 1; }
+.gauge .big small { font-size: 1rem; color: var(--muted); font-weight: 400; }
+.gauge .delta { font-size: .85rem; color: var(--muted); margin-top: 4px; }
+.bar { position: relative; height: 10px; border-radius: 5px; background: linear-gradient(90deg, var(--line) 0 80%, var(--warn-bg) 80% 90%, var(--good-bg) 90%); margin-top: 6px; }
+.bar i { position: absolute; top: -4px; width: 4px; height: 18px; border-radius: 2px; background: var(--ink); transform: translateX(-2px); }
+.scale { position: relative; height: 1.2em; font-size: .72rem; color: var(--muted); font-family: var(--mono); margin-top: 4px; }
+.scorebox { grid-column: 1 / -1; }
+.sig { display: inline-block; font-size: .78rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; margin-top: 8px; }
+.sig-strong { background: var(--good-bg); color: var(--good); }
+.sig-watch { background: var(--warn-bg); color: var(--warn); }
+.sig-none { background: var(--accent-soft); color: var(--muted); }
+.filters .sep { width: 1px; background: var(--line); margin: 2px 4px; }
+.scale span { position: absolute; transform: translateX(-50%); }
+.scale span:first-child { transform: none; } .scale span:last-child { transform: translateX(-100%); }
+
+.comment { margin: 0; font-size: 1.02rem; padding: 14px 16px; border-radius: 10px; background: var(--bg); border-left: 3px solid var(--accent); }
+
+.states { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+.state { border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 8px; }
+.state.now { border-color: var(--accent); }
+.state .t { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 600; }
+.state .t span.tag { font-size: .72rem; font-weight: 500; color: var(--accent); }
+.kv { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 6px; }
+.kv div { display: grid; }
+.kv b { font-family: var(--mono); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.kv small { color: var(--muted); font-size: .75rem; }
+.state .note { font-size: .78rem; color: var(--muted); }
+
+.chartbox { display: grid; gap: 6px; }
+.chartbox .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .8rem; color: var(--muted); }
+.chartbox .legend i { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 5px; border-radius: 2px; }
+svg.chart { width: 100%; height: auto; display: block; }
+svg.chart text { fill: var(--muted); font-family: var(--mono); font-size: 10px; }
+
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; font-variant-numeric: tabular-nums; }
+th { font-weight: 500; color: var(--muted); font-size: .78rem; }
+th:first-child, td:first-child { text-align: left; }
+td.num { font-family: var(--mono); }
+.pos { color: var(--good); } .neg { color: var(--bad); }
+
+.rank-head { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.filters button { font: inherit; font-size: .82rem; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--panel); }
+#rank tbody tr { cursor: pointer; }
+#rank tbody tr:hover { background: var(--accent-soft); }
+#rank td.sc { font-weight: 600; }
+.minibar { display: inline-block; width: 60px; height: 6px; border-radius: 3px; background: var(--line); vertical-align: middle; margin-left: 8px; position: relative; overflow: hidden; }
+.minibar i { position: absolute; inset: 0 auto 0 0; background: var(--accent); }
+
+.more { justify-self: center; font: inherit; font-size: .9rem; font-weight: 600; padding: 8px 18px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+.more:hover { border-color: var(--ink); }
+.foot { font-size: .8rem; color: var(--muted); line-height: 1.6; }
+button:focus-visible, tr:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 640px) {
+  .head { grid-template-columns: 1fr; }
+  .gauge { text-align: left; }
+  .states { grid-template-columns: 1fr; }
+  .hide-sm { display: none; }
+}
+
+/* 대시보드 머리말 */
+header.top { display: block; border-bottom: 4px solid var(--ink); padding: 24px 0 18px; }
+.eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .16em; color: var(--accent); text-transform: uppercase; }
+header.top h1 { font-family: var(--serif); font-weight: 900; font-size: clamp(34px, 6vw, 56px); line-height: 1.1; margin-top: 6px; }
+.top-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: flex-end; margin-top: 14px; }
+nav.site { display: flex; gap: 6px; flex-wrap: wrap; }
+nav.site a { font-size: 14px; font-weight: 700; text-decoration: none; color: inherit; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
+nav.site a:hover { border-color: var(--ink); }
+nav.site a[aria-current="page"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.top-right { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+#meta { font-size: 13px; color: var(--muted); margin: 0; }
+.gauge .big { font-family: var(--serif); font-weight: 900; }
+.card h2, .rank-head h2 { font-family: var(--serif); font-weight: 900; }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f1b2d">
+<link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="시스템 트레이딩">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<style>
+/* 새 디자인 머리글과 맞추기 */
+body{padding:0!important;background:var(--bg)}
+.wrap{padding:24px var(--pad) 48px;max-width:1200px}
+header.top nav.site{display:none}
+header.top .eyebrow{display:none}
+header.top h1{font-family:var(--serif);font-weight:900;font-size:clamp(28px,7vw,40px);letter-spacing:-1px}
+</style>
+<script src="assets/site.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Market Dashboard</div>
+    <h1>개별주 매력 지수</h1>
+    <div class="top-meta">
+      <nav class="site" aria-label="사이트">
+        <a href="index.html#singularity">매력 지수</a>
+        <a href="index.html#screener">주도섹터 스크리너</a>
+        <a href="stocks.html" aria-current="page">개별주 매력 지수</a>
+        <a href="index.html#research">연구 기록</a>
+      </nav>
+      <div class="top-right">
+        <p id="meta">불러오는 중…</p>
+        <div id="market" class="market"><span class="dot"></span><span>시장 상태 확인 중</span></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="search">
+    <input id="q" type="search" autocomplete="off" placeholder="티커나 이름으로 검색 (예: NVDA, 엔비디아, Coca-Cola)" aria-label="종목 검색">
+    <div id="sugg" class="sugg" hidden></div>
+    <div class="hint">S&amp;P 500·나스닥 100 종목을 매일 장 마감 후 다시 계산해요.</div>
+  </div>
+
+  <section id="detail" class="card" aria-live="polite"><p class="muted">종목을 불러오는 중…</p></section>
+
+  <section class="card">
+    <div class="rank-head">
+      <h2>전체 순위</h2>
+      <div class="filters" id="filters"></div>
+    </div>
+    <div class="scroll">
+      <table id="rank">
+        <thead><tr><th>종목</th><th>매력 점수</th><th>신호</th><th>유형</th><th class="hide-sm">섹터</th><th>적합도</th><th>지금 시장 기준</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <button type="button" id="more" class="more" hidden>더 보기</button>
+  </section>
+
+  <p class="foot">
+    매력 점수는 0~100점이며, 높을수록 그 종목의 과거 기준으로 많이 눌린 자리예요. 80~89점은 관심 구간, 90점 이상은 강한 신호예요. 2013년 이후 검증에서 90점 이상 신호가 평소보다 120일 수익이 약 6%p 높았고, 80점대는 2~4%p였어요. 적합도는 과거에 90점을 넘었던 때 이후 성과를 평소와 비교한 등급이에요(A 잘 맞음, B 보통, C 안 맞음). 2000년, 2008년 같은 장기 하락장에서는 신호가 일찍 떠서 크게 실패했어요. 시장 상태는 기준 지수가 200일선 위면 상승장, 아래면 하락장이에요. 맨 위의 시장 상태는 나스닥 기준이에요.
+    투자 판단의 참고 자료이며 매수·매도 권유가 아니에요.
+  </p>
+</div>
+
+<script>window.DATA_BASE = "data/attract/";</script>
+<script>
+const $ = s => document.querySelector(s);
+const BASE = window.DATA_BASE || "data/";
+let INDEX = null, LIST = [], filter = "전체", minScore = 0, shown = 50, cache = {}, ENTRY = 90, WATCH = 80;
+const GRADE_CLASS = g => g === "A" ? "g-A" : g === "B" ? "g-B" : g === "C" ? "g-C" : "g-N";
+const fmt = (v, d = 1, sign = false) => v == null || isNaN(v) ? "–" : (sign && v > 0 ? "+" : "") + Number(v).toFixed(d);
+const pct = (v, sign = false) => v == null || isNaN(v) ? "–" : fmt(v, 1, sign) + "%";
+const cls = v => v == null ? "" : v > 0 ? "pos" : v < 0 ? "neg" : "";
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+async function init() {
+  try {
+    INDEX = await (await fetch(BASE + "index.json", { cache: "no-store" })).json();
+  } catch (e) {
+    $("#detail").innerHTML = '<p>종목 데이터를 찾지 못했어요. 계산이 끝나면 다시 열어 주세요.</p>';
+    return;
+  }
+  LIST = INDEX.stocks;
+  ENTRY = INDEX.entry || 90; WATCH = INDEX.watch || 80;
+  $("#meta").textContent = `${INDEX.date} 종가 기준 · ${INDEX.count}종목` + (INDEX.stale ? " · 오늘 계산이 실패해서 이전 결과예요" : "");
+  const up = INDEX.market === "상승장";
+  $("#market").className = "market " + (up ? "up" : "down");
+  $("#market").innerHTML = `<span class="dot"></span><span>지금 시장: ${INDEX.market}</span>`;
+  $("#market").title = "나스닥 종합지수가 200일 이동평균선 " + (up ? "위" : "아래") + "에 있어요";
+  buildFilters(); renderRank();
+  const start = decodeURIComponent(location.hash.slice(1)).toUpperCase();
+  show(LIST.find(s => s.ticker === start) ? start : LIST[0].ticker, false);
+}
+
+function buildFilters() {
+  const kinds = ["전체", ...new Set(LIST.map(s => s.kind))];
+  const cnt = v => LIST.filter(s => (s.score || 0) >= v).length;
+  $("#filters").innerHTML = kinds.map(k => `<button type="button" aria-pressed="${k === filter}" data-k="${esc(k)}">${esc(k)}</button>`).join("")
+    + `<span class="sep"></span>`
+    + [[0, "모든 점수"], [WATCH, `관심 이상 (${cnt(WATCH)})`], [ENTRY, `강한 신호 (${cnt(ENTRY)})`]]
+      .map(([v, t]) => `<button type="button" aria-pressed="${v === minScore}" data-m="${v}">${t}</button>`).join("");
+  $("#filters").onclick = e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.k != null) filter = b.dataset.k; else minScore = +b.dataset.m;
+    shown = 50;
+    buildFilters(); renderRank();
+  };
+}
+
+function renderRank() {
+  const all = LIST.filter(s => (filter === "전체" || s.kind === filter) && (s.score || 0) >= minScore);
+  const rows = all.slice(0, shown);
+  const more = $("#more");
+  more.hidden = all.length <= shown;
+  more.textContent = `더 보기 (${all.length - shown}개 남음)`;
+  $("#rank tbody").innerHTML = rows.map(s => `
+    <tr tabindex="0" data-t="${esc(s.ticker)}">
+      <td><b class="num">${esc(s.ticker)}</b> <span class="muted">${esc(s.name_ko || s.name)}</span></td>
+      <td class="num sc">${fmt(s.score)}<span class="minibar"><i style="width:${s.score || 0}%"></i></span></td>
+      <td>${s.score >= ENTRY ? '<span class="chip g-A grade">강한 신호</span>' : s.score >= WATCH ? '<span class="chip g-B grade">관심</span>' : ""}</td>
+      <td>${esc(s.kind)}</td>
+      <td class="hide-sm">${esc(s.sector)}</td>
+      <td><span class="chip grade ${GRADE_CLASS(s.grade)}" title="${s.grade_src === "유형" ? "유형 기준" : "종목 기준"}">${esc(s.grade)}${s.grade_src === "유형" ? "<small>·유형</small>" : ""}</span></td>
+      <td><span class="chip grade ${GRADE_CLASS(s.grade_now)}" title="${esc(s.market_now || "")}">${esc(s.grade_now)}${s.grade_now_src === "유형" ? "<small>·유형</small>" : ""}</span></td>
+    </tr>`).join("");
+}
+$("#more").addEventListener("click", () => { shown += 50; renderRank(); });
+$("#rank").addEventListener("click", e => { const tr = e.target.closest("tr[data-t]"); if (tr) { show(tr.dataset.t); window.scrollTo({ top: 0, behavior: "smooth" }); } });
+$("#rank").addEventListener("keydown", e => { if (e.key === "Enter") { const tr = e.target.closest("tr[data-t]"); if (tr) show(tr.dataset.t); } });
+
+/* ---------- 검색 ---------- */
+const norm = s => String(s || "").toLowerCase().replace(/\s+/g, "");
+let sel = 0, hits = [];
+function search(q) {
+  const n = norm(q);
+  if (!n) return [];
+  return LIST.map(s => {
+    const t = s.ticker.toLowerCase(), nm = norm(s.name), ko = norm(s.name_ko);
+    let r = t === n ? 0 : t.startsWith(n) ? 1 : ko.includes(n) ? 2 : nm.startsWith(n) ? 3 : nm.includes(n) ? 4 : 9;
+    return [r, s];
+  }).filter(x => x[0] < 9).sort((a, b) => a[0] - b[0] || (b[1].score || 0) - (a[1].score || 0)).slice(0, 8).map(x => x[1]);
+}
+function drawSugg() {
+  const box = $("#sugg");
+  if (!hits.length) {
+    box.hidden = !$("#q").value.trim();
+    box.innerHTML = `<button type="button" disabled><span class="nm muted">찾는 종목이 목록(S&amp;P 500·나스닥 100)에 없어요</span></button>`;
+    return;
+  }
+  box.hidden = false;
+  box.innerHTML = hits.map((s, i) => `<button type="button" class="${i === sel ? "on" : ""}" data-t="${esc(s.ticker)}">
+    <span class="tk">${esc(s.ticker)}</span><span class="nm">${esc(s.name_ko ? s.name_ko + " · " : "")}${esc(s.name)}</span>
+    <span class="num">${fmt(s.score)}</span></button>`).join("");
+}
+$("#q").addEventListener("input", e => { hits = search(e.target.value); sel = 0; drawSugg(); });
+$("#q").addEventListener("keydown", e => {
+  if (e.key === "ArrowDown") { sel = Math.min(sel + 1, hits.length - 1); drawSugg(); e.preventDefault(); }
+  else if (e.key === "ArrowUp") { sel = Math.max(sel - 1, 0); drawSugg(); e.preventDefault(); }
+  else if (e.key === "Enter" && hits[sel]) { pick(hits[sel].ticker); }
+  else if (e.key === "Escape") { $("#sugg").hidden = true; }
+});
+$("#sugg").addEventListener("mousedown", e => { const b = e.target.closest("button[data-t]"); if (b) { e.preventDefault(); pick(b.dataset.t); } });
+$("#q").addEventListener("blur", () => setTimeout(() => $("#sugg").hidden = true, 100));
+function pick(t) { $("#q").value = ""; $("#sugg").hidden = true; hits = []; show(t); }
+
+/* ---------- 상세 ---------- */
+async function show(t, push = true) {
+  if (push) { try { history.replaceState(null, "", "#" + t); } catch (e) { location.hash = t; } }
+  let d = cache[t];
+  if (!d) {
+    try { d = cache[t] = await (await fetch(`${BASE}stocks/${encodeURIComponent(t)}.json`, { cache: "no-store" })).json(); }
+    catch (e) { $("#detail").innerHTML = `<p>${esc(t)} 데이터를 불러오지 못했어요.</p>`; return; }
+  }
+  const now = d.market_now, other = now === "상승장" ? "하락장" : "상승장";
+  const delta = d.score_prev != null && d.score != null ? d.score - d.score_prev : null;
+  $("#detail").innerHTML = `
+    <div class="head">
+      <div class="id">
+        <div class="tk">${esc(d.ticker)} · ${esc(d.sector)}</div>
+        <h2>${esc(d.name_ko || d.name)}${d.name_ko ? ` <span class="muted" style="font-size:.95rem;font-weight:400">${esc(d.name)}</span>` : ""}</h2>
+        <div class="chips">
+          <span class="chip">${esc(d.kind)}</span>
+          ${d.bench ? `<span class="chip" title="상대 낙폭을 잴 때 비교하는 지수">비교 기준 ${esc(d.bench)}</span>` : ""}
+          <span class="chip" title="최근 3년 주간 기준, S&amp;P 500이 1% 움직일 때 평균적으로 움직인 정도">시장 민감도 ${fmt(d.beta, 2)}</span>
+          <span class="chip" title="최근 3년 연간 변동성">변동성 ${fmt(d.vol, 0)}%</span>
+          ${epsChip(d.eps)}
+          <span class="chip grade ${GRADE_CLASS(d.grade)}" title="${d.grade_src === "유형" ? `이 종목은 과거 사례가 적어서 같은 ${esc(d.kind)} 종목 전체로 낸 등급이에요` : "이 종목의 과거 사례로 낸 등급이에요"}">적합도 ${esc(d.grade)}${d.grade_src === "유형" ? " (유형 기준)" : ""}</span>
+          <span class="chip grade ${GRADE_CLASS(d.by_state[now].grade)}">${esc(d.market_basis || "나스닥")} ${now}일 때 ${esc(d.by_state[now].grade)}${d.by_state[now].grade_src === "유형" ? " (유형 기준)" : ""}</span>
+        </div>
+      </div>
+      <div class="gauge">
+        <div class="big">${fmt(d.score)}<small> /100</small></div>
+        <div class="delta">${delta == null ? "" : `일주일 전보다 <span class="num ${cls(delta)}">${fmt(delta, 1, true)}</span>`}</div>
+        ${sigBadge(d.score, d.entry, d.watch)}
+      </div>
+      <div class="scorebox">
+        <div class="bar"><i style="left:${Math.max(0, Math.min(100, d.score || 0))}%"></i></div>
+        <div class="scale">${[0, 50, 80, 90, 100].map(v => `<span style="left:${v}%">${v}</span>`).join("")}</div>
+      </div>
+    </div>
+    <p class="comment">${esc(d.comment)}</p>
+    <div class="states">${stateBox(d, now, true)}${stateBox(d, other, false)}</div>
+    ${chart(d)}
+    ${episodes(d)}`;
+}
+
+function sigBadge(score, entry = 90, watch = 80) {
+  if (score == null) return "";
+  if (score >= entry) return `<span class="sig sig-strong">강한 신호</span>`;
+  if (score >= watch) return `<span class="sig sig-watch">관심</span>`;
+  return `<span class="sig sig-none">신호 없음</span>`;
+}
+
+function epsChip(e) {
+  if (!e || e.label === "자료 없음") return "";
+  const c = e.label === "증가" ? "g-A" : e.label === "감소" ? "g-B" : "g-C";
+  const g = e.growth != null ? ` ${fmt(e.growth, 0, true)}%` : "";
+  return `<span class="chip grade ${c}" title="${esc(e.filed)} 공시 (${esc(e.form)}), 작년 같은 기간 대비">최근 실적 EPS ${esc(e.label)}${g}</span>`;
+}
+
+function stateBox(d, st, isNow) {
+  const own = d.by_state[st] || { n: 0 }, grp = (d.group_all || {})[st] || { n: 0 };
+  const useOwn = own.n >= 5, s = useOwn ? own : grp;
+  const src = useOwn ? `이 종목 ${own.n}번` : (grp.n ? `이 종목은 ${own.n}번뿐이라 같은 ${d.kind} 전체 ${grp.n}번 기준` : `사례가 아직 없어요`);
+  return `<div class="state ${isNow ? "now" : ""}">
+    <div class="t"><span>${esc(d.market_basis || "나스닥")} ${st}에서 ${d.entry || 90}점을 넘었을 때</span>${isNow ? '<span class="tag">지금</span>' : ""}</div>
+    <div class="kv">
+      <div><b class="${cls(s.ret120)}">${pct(s.ret120, true)}</b><small>120일 뒤 평균</small></div>
+      <div><b>${s.win120 ?? "–"}${s.win120 != null ? "%" : ""}</b><small>오른 비율</small></div>
+      <div><b class="neg">${pct(s.dd120)}</b><small>중간 추가 하락</small></div>
+    </div>
+    <div class="note">${src}</div>
+  </div>`;
+}
+
+function chart(d) {
+  const c = d.chart; if (!c || !c.d.length) return "";
+  const W = 900, H = 300, L = 46, R = 12, T = 10, PH = 170, GAP = 18, SH = 80, n = c.d.length;
+  const x = i => L + (W - L - R) * i / (n - 1);
+  const pmin = Math.min(...c.p), pmax = Math.max(...c.p);
+  const logp = v => Math.log(v), lmin = logp(pmin), lmax = logp(pmax);
+  const yp = v => T + PH - (logp(v) - lmin) / (lmax - lmin || 1) * PH;
+  const sTop = T + PH + GAP, ys = v => sTop + SH - v / 100 * SH;
+  const pricePath = c.p.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${yp(v).toFixed(1)}`).join("");
+  const scorePath = `M${x(0)},${ys(0)}` + c.s.map((v, i) => `L${x(i).toFixed(1)},${ys(v).toFixed(1)}`).join("") + `L${x(n - 1)},${ys(0)}Z`;
+  const ticks = [pmin, Math.exp((lmin + lmax) / 2), pmax];
+  const years = []; let last = "";
+  c.d.forEach((dt, i) => { const y = dt.slice(0, 4); if (y !== last && i > 0 && (+y % 2 === 0)) years.push([i, y]); last = y; });
+  const first = c.d[0];
+  const marks = (d.episodes || []).filter(e => e.start >= first).map(e => {
+    let i = c.d.findIndex(dt => dt >= e.start); if (i < 0) i = n - 1;
+    const good = e.r120 == null ? null : e.r120 > 0;
+    const col = good == null ? "var(--accent)" : good ? "var(--good)" : "var(--bad)";
+    return `<line x1="${x(i)}" x2="${x(i)}" y1="${T}" y2="${sTop + SH}" stroke="${col}" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/>
+            <circle cx="${x(i)}" cy="${yp(c.p[i])}" r="4" fill="${col}" stroke="var(--panel)" stroke-width="1.5"/>`;
+  }).join("");
+  return `<div class="chartbox">
+    <div class="legend"><span><i style="background:var(--price)"></i>주가 (주간, 로그 눈금)</span><span><i style="background:var(--accent)"></i>매력 점수</span>
+      <span><i style="background:var(--good)"></i>${d.entry || 90}점 사건 · 120일 뒤 상승</span><span><i style="background:var(--bad)"></i>하락</span></div>
+    <svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="최근 10년 주가와 매력 점수">
+      ${ticks.map(v => `<line x1="${L}" x2="${W - R}" y1="${yp(v)}" y2="${yp(v)}" stroke="var(--line)"/><text x="${L - 6}" y="${yp(v) + 3}" text-anchor="end">${v >= 100 ? v.toFixed(0) : v.toFixed(1)}</text>`).join("")}
+      ${years.map(([i, y]) => `<text x="${x(i)}" y="${H - 2}" text-anchor="middle">${y}</text>`).join("")}
+      ${marks}
+      <path d="${pricePath}" fill="none" stroke="var(--price)" stroke-width="1.6"/>
+      <path d="${scorePath}" fill="var(--scorefill)" stroke="var(--accent)" stroke-width="1.2"/>
+      <line x1="${L}" x2="${W - R}" y1="${ys(d.watch || 80)}" y2="${ys(d.watch || 80)}" stroke="var(--warn)" stroke-dasharray="2 4" opacity=".7"/>
+      <line x1="${L}" x2="${W - R}" y1="${ys(d.entry || 90)}" y2="${ys(d.entry || 90)}" stroke="var(--good)" stroke-dasharray="4 3" opacity=".9"/>
+      <text x="${L - 6}" y="${ys(d.entry || 90) - 2}" text-anchor="end">${d.entry || 90}</text>
+      <text x="${L - 6}" y="${ys(0) + 3}" text-anchor="end">0</text>
+    </svg></div>`;
+}
+
+function episodes(d) {
+  const e = (d.episodes || []).slice().reverse();
+  if (!e.length) return `<p class="muted">${d.entry || 90}점을 넘었던 적이 아직 없어요.</p>`;
+  return `<div><h2 style="margin-bottom:8px">${d.entry || 90}점을 넘었던 때 (${e.length}번)</h2><div class="scroll"><table>
+    <thead><tr><th>시작일</th><th>시장</th><th>최고 점수</th><th>60일 뒤</th><th>120일 뒤</th><th>250일 뒤</th><th>중간 추가 하락</th></tr></thead>
+    <tbody>${e.map(r => `<tr>
+      <td class="num">${esc(r.start)}${r.end === "진행 중" ? ' <span class="chip">진행 중</span>' : ""}</td>
+      <td>${esc(r.market || "")}</td>
+      <td class="num">${fmt(r.peak)}</td>
+      <td class="num ${cls(r.r60)}">${pct(r.r60, true)}</td>
+      <td class="num ${cls(r.r120)}">${pct(r.r120, true)}</td>
+      <td class="num ${cls(r.r250)}">${pct(r.r250, true)}</td>
+      <td class="num neg">${pct(r.dd)}</td></tr>`).join("")}</tbody></table></div></div>`;
+}
+
+window.addEventListener("hashchange", () => { const t = decodeURIComponent(location.hash.slice(1)).toUpperCase(); if (t && cache[t] !== undefined || LIST.some(s => s.ticker === t)) show(t, false); });
+init();
+</script>
+</body>
+</html>

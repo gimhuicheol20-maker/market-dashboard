@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>매력 점수 · 시스템 트레이딩</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@700;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f1b2d">
+<link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="시스템 트레이딩">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<script src="assets/site.js"></script>
+</head>
+<body>
+<main class="page" style="gap:32px">
+
+<section class="hero">
+  <div class="txt">
+    <span class="eyebrow">매력 점수 · 구간별 성과</span>
+    <h1 class="h1" style="font-size:clamp(28px,7vw,40px)">70점 · 80점 · 90점 구간별 백테스팅</h1>
+    <p class="lede" id="intro"></p>
+  </div>
+  <div class="seg" role="group" aria-label="지수 선택">
+    <button type="button" data-k="qqq" aria-pressed="true">QQQ</button>
+    <button type="button" data-k="soxx" aria-pressed="false">SOXX</button>
+  </div>
+</section>
+
+<section class="grid" style="--min:150px;gap:12px" aria-label="현재 위치">
+  <div class="card"><span class="sub" style="font-size:13px" id="nowLabel">오늘 점수</span><span class="big" style="font-size:clamp(30px,8vw,40px)" id="now">–</span><span class="sub" style="font-size:13px" id="nowBand"></span></div>
+  <div class="card"><span class="sub" style="font-size:13px">90점 돌파 횟수</span><span class="big" style="font-size:clamp(30px,8vw,40px)"><span id="c90">–</span><span style="font-size:18px">번</span></span><span class="sub" style="font-size:13px" id="c7080"></span></div>
+  <div class="card"><span class="sub" style="font-size:13px">아무 날 샀을 때 12개월</span><span class="big" style="font-size:clamp(30px,8vw,40px)" id="base">–</span><span class="sub" style="font-size:13px" id="baseWin"></span></div>
+  <div class="card dark"><span style="font-size:13px;color:var(--on-dark-muted)">90+에서 샀을 때 12개월</span><span class="big" style="font-size:clamp(30px,8vw,40px);color:var(--accent-on-dark)" id="top">–</span><span style="font-size:13px;color:var(--on-dark-muted)" id="topWin"></span></div>
+</section>
+
+<section class="sec" aria-label="점수대별 성과">
+  <h2 class="h2">점수대별 이후 성과</h2>
+  <div id="bands" style="display:flex;flex-direction:column;gap:16px"></div>
+  <p class="note">검은 세로선 = 아무 날 샀을 때(기준선). 추가하락 = 산 뒤 6개월 안에 더 빠진 폭의 중앙값. 돌파 횟수는 20거래일 안에 다시 넘은 건 한 번으로 셌어요.</p>
+</section>
+
+<section class="grid" style="--min:340px;gap:24px">
+  <div class="card lg" style="gap:14px">
+    <h2 style="font-size:18px">최근 90+ 구간</h2>
+    <table class="t"><thead><tr><th>시작일</th><th>최고 점수</th><th>90+ 유지</th></tr></thead><tbody id="eps"></tbody></table>
+  </div>
+  <div class="callout">
+    <h2>처음 보는 데이터에서도 통했을까</h2>
+    <p id="oos"></p>
+    <p>하락장(2000~2002, 2008)에선 90+가 바닥보다 일찍, 여러 번 떴어요. 레버리지로 한 번에 들어가면 위험하고, 나눠서 사는 게 맞아요.</p>
+    <p class="note" style="color:var(--warn-ink)">CNN 공포탐욕지수는 과거 데이터가 없어 빼고 계산한 백테스트예요.</p>
+  </div>
+</section>
+
+<p class="foot">투자 판단을 돕는 참고 자료예요. 과거 성과가 미래 수익을 보장하지 않아요. 점수 계산식은 공개하지 않아요.</p>
+</main>
+
+<script>
+(function () {
+  var D = {
+    qqq: {
+      period: "2000년 3월부터 26년간", asset: "QQQ", c70: 50, c80: 45, c90: 27, base: 12.8, baseWin: 80,
+      bands: [
+        { k: "90+", days: 309, c: "c90", r1: 2.9, r3: 5.7, r6: 8.2, r12: 18.4, win: 74, dd: -9.8, verdict: "기준선을 이김", tone: "top", note: "유일하게 기준선을 넘는 구간. 다만 사고 나서 한 번 더 흔들리는 걸 각오해야 해요." },
+        { k: "80~90", days: 592, c: "c80", r1: -0.4, r3: 0.4, r6: 1.4, r12: 5.0, win: 57, dd: -10.6, verdict: "가장 약함", tone: "warn", note: "떨어지는 칼 구간. 더 빠지는 일이 잦아 매수 구간으로 쓰지 않아요." },
+        { k: "70~80", days: 810, c: "c70", r1: 0.1, r3: 0.3, r6: 1.7, r12: 6.7, win: 63, dd: -8.3, verdict: "기준선보다 약함", tone: "mid", note: "오르긴 했지만 아무 날 산 것의 절반 수준이에요." }
+      ],
+      eps: [["2026-11-05", "96.9", "진행 중"], ["2026-03-20", "98.3", "4일"], ["2025-03-06", "100.0", "17일"], ["2022-09-23", "95.3", "10일"], ["2022-04-26", "96.3", "11일"], ["2022-01-21", "97.8", "15일"], ["2020-03-09", "99.9", "18일"]],
+      oos: "설정을 정할 때 보지 않은 2000~2010년에도 90+는 12개월 평균 +9.8%로, 아무 날(+0.8%)보다 9%p 나았어요. 대신 6개월 안 추가하락 중앙값이 −18%로 컸어요."
+    },
+    soxx: {
+      period: "2002년 7월부터 24년간", asset: "SOXX", c70: 20, c80: 17, c90: 14, base: 22.0, baseWin: 72,
+      bands: [
+        { k: "90+", days: 155, c: "c90", r1: 2.8, r3: 9.0, r6: 17.4, r12: 52.3, win: 97, dd: -11.2, verdict: "가장 강함", tone: "top", note: "12개월 승률 97%. 반도체가 크게 빠진 뒤에 뜬 신호들이에요." },
+        { k: "80~90", days: 174, c: "c80", r1: 0.7, r3: 4.2, r6: 6.7, r12: 24.9, win: 80, dd: -10.9, verdict: "기준선과 비슷", tone: "warn", note: "아무 날 산 것과 큰 차이가 없어요. 점수만 보고 들어갈 이유는 약해요." },
+        { k: "70~80", days: 193, c: "c70", r1: 2.8, r3: 7.1, r6: 12.7, r12: 31.9, win: 80, dd: -9.7, verdict: "기준선보다 좋음", tone: "mid", note: "QQQ와 달리 70점대도 나쁘지 않았어요. 다만 표본이 193일로 적어요." }
+      ],
+      eps: [["2026-11-05", "90.4", "1일"], ["2025-04-03", "99.2", "9일"], ["2022-10-14", "90.6", "1일"], ["2022-06-16", "92.2", "3일"], ["2020-03-12", "99.1", "6일"], ["2018-12-24", "92.7", "1일"], ["2018-10-24", "93.8", "3일"]],
+      oos: "설정을 정할 때 보지 않은 2002~2012년에도 90+는 12개월 평균 +42.4%, 승률 96%로 아무 날(+9.6%)보다 33%p 나았어요. 6개월 안 추가하락 중앙값은 −17%였어요."
+    }
+  };
+  var TONE = {
+    top: { color: "var(--accent)", pill: "blue", border: "2px solid var(--accent)" },
+    warn: { color: "var(--warn)", pill: "amber", border: "1px solid var(--line)" },
+    mid: { color: "var(--muted)", pill: "", border: "1px solid var(--line)" }
+  };
+  var LIVE = {}, sel = "qqq";
+  var $ = function (id) { return document.getElementById(id); };
+
+
+  // 최근 1년은 매일 들어오는 점수 기록으로 계산하고, 그 이전은 백테스트 기록(고정)을 써요.
+  // 20거래일 안에 다시 90을 넘으면 같은 구간으로 봐요.
+  function episodes(fixed, hist) {
+    if (!hist || !hist.length) return fixed.slice(0, 7);
+    var start = hist[0].date, out = [], cur = null, lastIdx = -99;
+    hist.forEach(function (p, i) {
+      if (p.score < 90) return;
+      if (cur && i - lastIdx <= 20) { cur.peak = Math.max(cur.peak, p.score); cur.days++; }
+      else { cur = { d: p.date, peak: p.score, days: 1 }; out.push(cur); }
+      lastIdx = i;
+    });
+    var live = hist[hist.length - 1].score >= 90;
+    var rows = out.map(function (e, k) {
+      var ongoing = live && k === out.length - 1;
+      return [e.d, e.peak.toFixed(1), ongoing ? "진행 중 (" + e.days + "일)" : e.days + "일"];
+    }).reverse();
+    var older = fixed.filter(function (e) { return e[0] < start; });
+    return rows.concat(older).slice(0, 7);
+  }
+
+  function render() {
+    var d = D[sel], f = MD.pct;
+    $("intro").textContent = d.period + "의 지표와 시장의 분위기를 점수화해 보았고, 각 점수 구간별로 이후 1년 " + d.asset + " 주가가 어떻게 되었는지 통계를 냈어요.";
+    var lv = LIVE[sel];
+    if (lv) {
+      $("nowLabel").textContent = "오늘 점수 (" + MD.md(lv.date) + ")";
+      $("now").textContent = lv.score.toFixed(1);
+      $("nowBand").textContent = lv.score >= 90 ? "90+ 구간" : lv.score >= 80 ? "80~90 구간 · 참고만" : lv.score >= 70 ? "70~80 구간 · 참고만" : "70점 미만";
+    }
+    $("c90").textContent = d.c90;
+    $("c7080").textContent = "80점 " + d.c80 + "번 · 70점 " + d.c70 + "번";
+    $("base").textContent = f(d.base); $("baseWin").textContent = "비교 기준선 · 승률 " + d.baseWin + "%";
+    $("top").textContent = f(d.bands[0].r12); $("topWin").textContent = "승률 " + d.bands[0].win + "%";
+    var max = Math.max(d.base, d.bands[0].r12, d.bands[1].r12, d.bands[2].r12) * 1.1;
+    $("bands").innerHTML = d.bands.map(function (b) {
+      var t = TONE[b.tone];
+      var m = function (k, v, cls) { return '<div class="metric"><span>' + k + "</span><b" + (cls ? ' class="' + cls + '"' : "") + ' style="font-size:15px">' + v + "</b></div>"; };
+      return '<article class="card lg" style="border:' + t.border + ';flex-direction:row;flex-wrap:wrap;align-items:center;gap:24px">' +
+        '<div style="flex:1 1 160px;display:flex;flex-direction:column;gap:6px"><span class="big" style="font-size:28px;color:' + t.color + '">' + b.k + "</span>" +
+        '<span class="sub" style="font-size:13px">' + b.k.replace("~90", "").replace("~80", "").replace("+", "") + "점 돌파 " + d[b.c] + "번 · " + b.days + "일</span>" +
+        '<span class="pill ' + t.pill + '" style="align-self:flex-start">' + b.verdict + "</span></div>" +
+        '<div style="flex:1 1 420px;min-width:0;display:flex;flex-direction:column;gap:14px">' +
+        '<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted)"><span>12개월 평균 수익</span><b class="num" style="color:var(--ink);font-size:15px">' + f(b.r12) + "</b></div>" +
+        '<div class="bar" style="height:14px"><i style="width:' + (b.r12 / max * 100).toFixed(1) + "%;background:" + t.color + '"></i><em style="left:' + (d.base / max * 100).toFixed(1) + '%"></em></div></div>' +
+        '<div class="metrics">' + m("1개월", f(b.r1)) + m("3개월", f(b.r3)) + m("6개월", f(b.r6)) + m("12개월 승률", b.win + "%") + m("6개월 내 추가하락", f(b.dd), "red") + "</div></div>" +
+        '<p style="flex:1 1 220px;font-size:14px;line-height:1.6;color:var(--muted)">' + b.note + "</p></article>";
+    }).join("");
+    $("eps").innerHTML = episodes(d.eps, lv && lv.history).map(function (e) {
+      return '<tr><td class="num">' + e[0] + '</td><td class="num blue" style="font-weight:700">' + e[1] + "</td><td>" + e[2] + "</td></tr>";
+    }).join("");
+    $("oos").textContent = d.oos;
+    document.querySelectorAll(".seg button").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-k") === sel ? "true" : "false"); });
+  }
+
+  document.querySelectorAll(".seg button").forEach(function (b) {
+    b.addEventListener("click", function () { sel = b.getAttribute("data-k"); render(); });
+  });
+  render();
+  MD.json("data/singularity.json").then(function (sg) {
+    (sg.indexes || []).forEach(function (x) { LIVE[x.key] = x; });
+    render();
+  }).catch(function () {});
+})();
+</script>
+</body>
+</html>

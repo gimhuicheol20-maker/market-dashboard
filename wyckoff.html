@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>와이코프 · 시스템 트레이딩</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@700;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f1b2d">
+<link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="시스템 트레이딩">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<script src="assets/site.js"></script>
+<style>
+.search{position:relative}
+.search input{width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:14px 18px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--ink)}
+.search input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.sugg{position:absolute;z-index:5;left:0;right:0;top:calc(100% + 6px);margin:0;padding:6px;list-style:none;background:var(--panel);border:1px solid var(--line);border-radius:16px;max-height:320px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.sugg li{padding:10px 12px;border-radius:10px;cursor:pointer;display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.sugg li:hover,.sugg li[aria-selected="true"]{background:var(--sunk)}
+.sugg small{color:var(--muted);font-family:var(--mono)}
+.step{display:flex;gap:12px;align-items:flex-start}
+.step .no{flex:none;width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--panel);font-family:var(--mono);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.step .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.step h3{margin:0;font-size:16px}
+.lv{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.lv li{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline}
+.lv b{font-family:var(--mono)}
+.lv small{color:var(--muted)}
+.scn{margin:0;padding-left:20px;font-size:16px;line-height:1.8;font-weight:500}
+.sig{font-size:15px;font-weight:700}
+.chips2{display:flex;flex-wrap:wrap;gap:6px}
+</style>
+</head>
+<body>
+<main class="page" style="gap:28px">
+
+<section class="hero">
+  <div class="txt">
+    <span class="eyebrow">S&amp;P500 · KOSPI200 · 매일 장 마감 후 갱신</span>
+    <h1 class="h1" style="font-size:clamp(28px,7vw,40px)">와이코프</h1>
+    <p class="lede">허준식 차트 읽기를 규칙으로 옮겨 종목마다 계산해요. 여러 번 막힌 가격, 바닥을 받친 지지 가격, 하락 빗각, 거래량, 지수 장세를 보고 "어디를 넘으면 가고, 어디를 깨면 끝인지"를 정리해요.</p>
+  </div>
+</section>
+
+<section class="sec" aria-label="종목 검색">
+  <div class="search">
+    <input id="q" type="search" placeholder="종목명 또는 코드 (예: 애플, AAPL, 삼성전자, 005930)" autocomplete="off" aria-label="종목 검색" aria-autocomplete="list" aria-controls="sugg">
+    <ul class="sugg" id="sugg" role="listbox" hidden></ul>
+  </div>
+  <p class="note" id="idx-note">목록 불러오는 중…</p>
+</section>
+
+<section class="sec" id="out" aria-live="polite" hidden></section>
+
+<section class="rules" aria-label="유의사항">
+  <div><b>규칙으로 계산한 값이에요</b><span>레벨은 앞뒤 10일 중 최고·최저인 과거 고가·저가를 3% 안끼리 묶은 가격대, 빗각은 최근 150일 최고점과 그 뒤 낮은 고점을 이은 선이에요. 사람이 긋는 선과 다를 수 있어요.</span></div>
+  <div><b>백테스트 근거</b><span>미장(S&amp;P500 2003~2026)에서 "지지 유지 + 빗각 돌파 + 거래량 → 눌림 반등 매수"가 효과 있었어요. 국장은 2010년 이후 약했어요.</span></div>
+  <div><b>판단과 책임은 본인에게</b><span>투자 권유가 아닌 참고용 분석이에요.</span></div>
+</section>
+
+</main>
+<script>
+(function () {
+  var ITEMS = [], sel = -1;
+  var q = document.getElementById("q"), sugg = document.getElementById("sugg"), out = document.getElementById("out");
+  var MK = { us: "미장", kr: "국장" };
+  var SIG = { buy: ["green", "매수 자리"], wait: ["blue", "눌림 대기"], weak: ["amber", "돌파 약함"], expired: ["", "기한 지남"], none: ["", "신호 없음"] };
+
+  function norm(s) { return String(s || "").toLowerCase().replace(/\s+/g, ""); }
+  function money(v, cur) {
+    if (v === null || v === undefined || isNaN(v)) return "—";
+    return cur + (v >= 100 ? Math.round(v).toLocaleString("ko-KR") : Number(v).toFixed(2));
+  }
+
+  MD.json("data/wyckoff/index.json").then(function (d) {
+    ITEMS = d.items || [];
+    document.getElementById("idx-note").textContent = ITEMS.length + "종목 · " + (d.made_at || "") + " 기준";
+    var k = new URLSearchParams(location.search).get("s");
+    if (k) open(k);
+  }).catch(function () {
+    document.getElementById("idx-note").textContent = "아직 분석 데이터가 없어요. 다음 장 마감 갱신 뒤에 보여요.";
+  });
+
+  function find(text) {
+    var t = norm(text);
+    if (!t) return [];
+    var a = [], b = [];
+    ITEMS.forEach(function (it) {
+      var s = norm(it.sym), n = norm(it.name);
+      if (s === t || n === t || s.indexOf(t) === 0 || n.indexOf(t) === 0) a.push(it);
+      else if (n.indexOf(t) >= 0 || s.indexOf(t) >= 0) b.push(it);
+    });
+    return a.concat(b).slice(0, 12);
+  }
+
+  function showSugg(list) {
+    sel = -1;
+    if (!list.length) { sugg.hidden = true; sugg.innerHTML = ""; return; }
+    sugg.innerHTML = list.map(function (it, i) {
+      return '<li role="option" data-k="' + MD.esc(it.k) + '" id="o' + i + '"><span>' + MD.esc(it.name) + '</span><small>' + MD.esc(it.sym) + " · " + MK[it.market] + "</small></li>";
+    }).join("");
+    sugg.hidden = false;
+  }
+
+  q.addEventListener("input", function () { showSugg(find(q.value)); });
+  q.addEventListener("keydown", function (e) {
+    var lis = sugg.querySelectorAll("li");
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      if (!lis.length) return;
+      e.preventDefault();
+      sel = (sel + (e.key === "ArrowDown" ? 1 : -1) + lis.length) % lis.length;
+      lis.forEach(function (li, i) { li.setAttribute("aria-selected", i === sel ? "true" : "false"); });
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      var li = lis[sel >= 0 ? sel : 0];
+      if (li) pick(li.getAttribute("data-k"));
+    } else if (e.key === "Escape") { sugg.hidden = true; }
+  });
+  sugg.addEventListener("click", function (e) {
+    var li = e.target.closest("li");
+    if (li) pick(li.getAttribute("data-k"));
+  });
+  document.addEventListener("click", function (e) { if (!e.target.closest(".search")) sugg.hidden = true; });
+
+  function pick(k) {
+    sugg.hidden = true;
+    var it = ITEMS.filter(function (x) { return x.k === k; })[0];
+    if (it) q.value = it.name + " (" + it.sym + ")";
+    try { history.replaceState(null, "", "?s=" + encodeURIComponent(k)); } catch (e) {}
+    open(k);
+  }
+
+  function lvList(arr, cur, emptyText) {
+    if (!arr || !arr.length) return '<p class="note">' + emptyText + "</p>";
+    return '<ul class="lv">' + arr.map(function (x) {
+      return "<li><b>" + money(x.price, cur) + "</b><span>" + x.touches + "번 반응</span><small>" + MD.esc((x.dates || []).join(", ")) + (x.lows_only ? " · 저점들" : "") + " · " + x.age_years + "년 전부터</small></li>";
+    }).join("") + "</ul>";
+  }
+
+  function step(no, title, html) {
+    return '<div class="step"><span class="no">' + no + '</span><div class="body"><h3>' + title + "</h3>" + html + "</div></div>";
+  }
+
+  function open(k) {
+    out.hidden = false;
+    out.innerHTML = '<p class="loading">불러오는 중…</p>';
+    MD.json("data/wyckoff/s/" + encodeURIComponent(k) + ".json").then(render).catch(function () {
+      out.innerHTML = '<div class="card"><p>이 종목의 분석이 아직 없어요.</p></div>';
+    });
+  }
+
+  function render(a) {
+    var cur = a.currency, f = a.flow, tl = a.trendline, sup = a.support, m = a.market_state, sc = a.scenario, s = SIG[a.signal.state] || SIG.none;
+
+    var flowTxt = f.box_years + "년 박스 " + money(f.box_lo, cur) + " ~ " + money(f.box_hi, cur) + ", 지금은 박스의 " + f.box_pos_pct + "% 위치. " +
+      (f.lows_rising ? "해마다 저점이 높아지는 중." : f.lows_falling ? "해마다 저점이 낮아지는 중." : "저점은 일정하지 않음.") +
+      " 200일선 " + (f.above_ma200 ? "위" : "아래") + ", 52주 고점 대비 " + MD.pct(f.from_52w_high_pct) + ".";
+
+    var tlTxt = !tl ? '<p class="note">최근 150일 안에 내려오는 빗각이 없어요.</p>' :
+      "<p>" + MD.md(tl.from) + " 고점 " + money(tl.from_price, cur) + "에서 내려오는 선, 오늘 " + money(tl.line_today, cur) + ". 지금 가격은 선 " + (tl.above ? "위" : "아래") + " (" + MD.pct(tl.dist_pct) + ")." +
+      (tl.breakout_date ? " <b>" + MD.md(tl.breakout_date) + " 돌파</b>." : "") + " 고점→바닥 하락 " + tl.drop_pct + "%.</p>";
+
+    var supTxt = sup ? '<p>이번 바닥(' + money(tl.low, cur) + ')을 받친 가격대: <b>' + money(sup.price, cur) + "</b> · " + sup.touches + "번 반응 · " + sup.age_years + "년 된 레벨" + (sup.lows_only ? " · 저점들로만 된 레벨" : "") + ' · <span class="pill ' + (sup.score >= 3 ? "green" : sup.score >= 2 ? "blue" : "amber") + '">지지 점수 ' + sup.score + "/5</span></p>" : "";
+
+    var volTxt = "<p>오늘 거래량 20일 평균의 " + (a.volume.today_x == null ? "—" : a.volume.today_x + "배") + (tl && tl.breakout_vol_x ? ", 빗각 돌파일 " + tl.breakout_vol_x + "배" : "") + ". 돌파는 1.2배 이상, 2배 이상이면 더 좋아요.</p>";
+
+    var mktTxt = "<p>" + MD.esc(m.name) + " " + (m.above_ma200 ? "200일선 위" : "200일선 아래") + " · 52주 고점 대비 " + MD.pct(m.from_52w_high_pct) + (m.top_zone ? " (고점권)" : "") + ".</p>";
+
+    var caution = (sc.caution || []).map(function (c) { return '<span class="pill amber">' + MD.esc(c) + "</span>"; }).join("");
+
+    out.innerHTML =
+      '<div class="card" style="gap:18px">' +
+        '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline">' +
+          '<h2 class="h2" style="margin:0">' + MD.esc(a.name) + ' <small class="muted" style="font-size:15px;font-family:var(--mono)">' + MD.esc(a.sym) + " · " + MK[a.market] + (a.sector ? " · " + MD.esc(a.sector) : "") + "</small></h2>" +
+          '<span class="muted" style="font-family:var(--mono);font-size:14px">' + money(a.close, cur) + " · " + MD.md(a.date) + " 종가</span>" +
+        "</div>" +
+        '<div class="callout" style="display:flex;flex-direction:column;gap:8px"><span class="pill ' + s[0] + '" style="align-self:flex-start">' + s[1] + '</span><span class="sig">' + MD.esc(a.signal.text) + "</span>" +
+          (a.signal.stop ? '<span class="note">손절 기준 ' + money(a.signal.stop, cur) + "</span>" : "") +
+          (a.signal.pullback_to ? '<span class="note">눌림 기준 ' + money(a.signal.pullback_to, cur) + " 근처까지 내려왔다 양봉으로 돌아서는 날</span>" : "") + "</div>" +
+        step(6, "시나리오", sc.lines && sc.lines.length ? '<ol class="scn">' + sc.lines.map(function (l) { return "<li>" + MD.esc(l) + "</li>"; }).join("") + "</ol>" : '<p class="note">레벨이 부족해 시나리오를 만들 수 없어요.</p>') +
+        (caution ? '<div class="chips2">' + caution + "</div>" : "") +
+      "</div>" +
+      '<div class="card" style="gap:18px">' +
+        step(1, "큰 흐름", "<p>" + MD.esc(flowTxt) + "</p>") +
+        step(2, "위 핵심 가격", lvList(a.above, cur, "위로 여러 번 막힌 가격대가 없어요 (신고가 근처).")) +
+        step(3, "아래 지지 가격", lvList(a.below, cur, "아래로 여러 번 받친 가격대가 없어요.") + supTxt) +
+        step(4, "빗각", tlTxt) +
+        step(5, "거래량", volTxt) +
+        step(7, "장세", mktTxt) +
+        '<p class="note">' + MD.esc(a.made_at || "") + " 계산</p>" +
+      "</div>";
+  }
+})();
+</script>
+</body>
+</html>
