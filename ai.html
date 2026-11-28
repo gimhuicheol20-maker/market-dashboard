@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>미장 AI · 시스템 트레이딩</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@700;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f1b2d">
+<link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="시스템 트레이딩">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<script src="assets/site.js"></script>
+<style>
+.verdict{font-size:13px}
+.rt{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.rt li{display:flex;gap:8px;align-items:flex-start;font-size:14px;line-height:1.55}
+.rt li .pill{flex:none;font-size:11px;padding:2px 8px}
+.rt li small{display:block;color:var(--muted);font-size:13px}
+.why{font-size:14px;line-height:1.65;border-top:1px dashed var(--line);padding-top:12px}
+.ovr{font-size:12px;color:var(--bad);font-weight:700}
+.tbl-wrap{overflow-x:auto}
+table.t td.n,table.t th.n{text-align:right;font-family:var(--mono);padding-left:12px}
+</style>
+</head>
+<body>
+<main class="page" style="gap:32px">
+
+<section class="hero">
+  <div class="txt">
+    <span class="eyebrow">S&amp;P500 · 매력 점수 80 · AI 반론 감사</span>
+    <h1 class="h1" style="font-size:clamp(28px,7vw,40px)">미장 AI 감사</h1>
+    <p class="lede">많이 눌린 종목은 규칙이 고르고, AI는 그게 반등할 눌림인지 아직 떨어지는 칼인지만 감사해요. 반론팀이 큰 위험을 찾고, 심판이 반박하지 못하면 브레이크를 걸어요. 평범한 악재는 규칙이 이미 감안했으니 꼬리 위험만 걸러요.</p>
+  </div>
+  <div class="btns"><span class="status" id="st"><span class="dot gray"></span>불러오는 중</span></div>
+</section>
+
+<section class="sec" aria-label="오늘 감사">
+  <div class="sec-h"><h2 class="h2" id="today-h">오늘 감사</h2><p id="today-sub"></p></div>
+  <div class="grid" style="--min:320px" id="cards"><p class="loading">불러오는 중…</p></div>
+</section>
+
+<section class="sec" aria-label="관망 중" id="watch-sec" hidden>
+  <div class="sec-h" style="flex-direction:column;align-items:flex-start"><h2 class="h2">관망 중</h2><p>큰 위험인지 아직 확인이 안 돼서 5거래일 뒤 새 소식으로 다시 감사해요. 최대 두 번(10거래일)까지 기다리고, 그래도 애매하면 비중 30으로 사요. 과거 신호는 10거래일 늦게 사도 성적이 나빠지지 않았어요.</p></div>
+  <div class="card"><ul class="feed" id="watch"></ul></div>
+</section>
+
+<section class="sec" aria-label="장부 성적">
+  <div class="sec-h" style="flex-direction:column;align-items:flex-start"><h2 class="h2">장부 성적</h2>
+    <p>실제 주문 없이 모든 신호를 판정이 난 다음 날 미국 시가에 산 것으로 기록해요(규칙만은 신호 다음 날). 통과든 브레이크든 똑같이 기록해서 AI가 거른 효과를 비교해요. 수익은 편도 0.25% 비용을 뺀 값이고, 초과는 같은 기간 SPY 대비예요.</p></div>
+  <div class="card"><div class="tbl-wrap"><table class="t" id="groups"><tbody><tr><td class="loading">불러오는 중…</td></tr></tbody></table></div>
+    <p class="note" id="verdict-note"></p></div>
+</section>
+
+<section class="sec" aria-label="최근 기록">
+  <h2 class="h2">최근 기록</h2>
+  <div class="card"><div class="tbl-wrap"><table class="t" id="rows"><tbody><tr><td class="loading">불러오는 중…</td></tr></tbody></table></div></div>
+</section>
+
+<section class="sec" aria-label="하루 흐름">
+  <h2 class="h2">하루 흐름 <small class="muted" style="font-size:14px;font-weight:500">한국 시간</small></h2>
+  <ol class="steps">
+    <li><span class="n">STEP 1</span><span class="tm">06:30</span><h3>신호</h3><p>미국장 마감 후 S&amp;P500 전 종목의 매력 점수를 계산해요. 60거래일 만에 처음 80을 넘은 종목이 후보예요.</p></li>
+    <li><span class="n">STEP 2</span><span class="tm">21:00</span><h3>반론팀</h3><p>AI가 웹에서 회계 문제·재무 위기·형사 조사·대규모 희석 같은 꼬리 위험만 찾아요.</p></li>
+    <li><span class="n">STEP 3</span><span class="tm">21:00</span><h3>심판</h3><p>다른 AI가 반론을 확인된 사실로 반박할 수 있는지 봐요. 반박 못 한 큰 위험이 있으면 브레이크예요.</p></li>
+    <li><span class="n">STEP 4</span><span class="tm">23:30~</span><h3>가상 진입</h3><p>통과·브레이크 모두 미국 시가로 장부에 기록하고 20일·60일 뒤 성적을 매겨요. 관망은 판정이 날 때까지 기다려요.</p></li>
+  </ol>
+</section>
+
+<section class="rules" aria-label="유의사항">
+  <div><b>실험 중이에요</b><span>AI 감사가 효과가 있는지는 통과·브레이크가 각 20건 넘게 쌓이고 60일이 지나야 판단할 수 있어요. 첫 판정까지 반년쯤 걸려요.</span></div>
+  <div><b>규칙이 우선이에요</b><span>시장이 60일 고점보다 10% 넘게 빠지면 비상 손절 규칙이 신규 진입을 막고, 그동안은 감사도 쉬어요.</span></div>
+  <div><b>AI도 틀려요</b><span>판정 이유는 AI가 웹 검색으로 정리한 거라 사실과 다를 수 있어요. 원문 공시·뉴스를 직접 확인하세요.</span></div>
+  <div><b>판단과 책임은 본인에게</b><span>이 페이지는 투자 권유가 아닌 실험 기록이에요.</span></div>
+</section>
+</main>
+
+<script>
+(function () {
+  var E = MD.esc;
+  function vpill(it) {
+    var v = it.verdict;
+    if (v === "pass") return '<span class="pill ' + (it.weight >= 100 ? "green" : it.weight >= 50 ? "blue" : "amber") + ' verdict">통과 · 비중 ' + it.weight + "</span>";
+    if (v === "brake") return '<span class="pill red verdict">브레이크</span>';
+    if (v === "watch") return '<span class="pill verdict" style="background:var(--warn-bg);color:var(--warn-ink)">관망 · ' + MD.md(it.next_review) + " 재감사</span>";
+    if (v === "pending") return '<span class="pill verdict">21:00 감사 예정</span>';
+    if (v === "none") return '<span class="pill verdict">감사 없음</span>';
+    return '<span class="pill verdict">' + E(v || "—") + "</span>";
+  }
+  var SEV = { high: ["red", "높음"], medium: ["amber", "중간"], low: ["", "낮음"] };
+  function redList(it) {
+    var list = it.rebuttals && it.rebuttals.length ? it.rebuttals : it.red_points || [];
+    if (!list.length) return it.verdict === "pass" || it.verdict === "brake" ? '<p class="note">반론팀이 찾은 위험이 없어요.</p>' : "";
+    return '<div><p class="sub" style="margin-bottom:8px">반론팀</p><ul class="rt">' + list.map(function (p) {
+      var s = SEV[p.severity] || ["", p.severity || ""];
+      var st = p.rebutted === undefined ? "" : p.rebutted ? ' <b class="green" style="font-size:12px">반박됨</b>' : ' <b class="red" style="font-size:12px">반박 못 함</b>';
+      return '<li><span class="pill ' + s[0] + '">' + s[1] + "</span><span>" + E(p.claim) + st + (p.why ? "<small>" + E(p.why) + "</small>" : "") + "</span></li>";
+    }).join("") + "</ul></div>";
+  }
+  function card(it) {
+    var rc = it.recheck_of ? '<p class="sub">관망 재감사 ' + it.review_no + '회차 · 처음 신호 ' + MD.md(it.recheck_of) + "</p>" : "";
+    return '<article class="card">' + rc + '<div class="top"><h3><span class="num">' + E(it.sym) + '</span> <small>' + E(it.name || "") + "</small></h3>" + vpill(it) + "</div>" +
+      '<div class="metrics"><div class="metric"><span>매력 점수</span><b>' + (it.score != null ? it.score.toFixed(1) : "—") + '</b></div><div class="metric"><span>1년 고점 대비</span><b>' + MD.pct(it.from_1y_high_pct) + '</b></div><div class="metric"><span>최근 20일</span><b>' + MD.pct(it.ret_20d_pct) + "</b></div></div>" +
+      (it.cause ? '<p style="font-size:14px"><b>하락 원인</b> · ' + E(it.cause) + "</p>" : "") +
+      redList(it) +
+      (it.reason ? '<p class="why">' + E(it.reason) + (it.rule_override ? '<br><span class="ovr">규칙 보정: ' + E(it.rule_override) + "</span>" : "") + "</p>" : "") +
+      '<p class="sub">' + E(it.sector || "") + "</p></article>";
+  }
+  MD.json("data/ai/latest.json").then(function (d) {
+    var m = d.market || {};
+    var st = document.getElementById("st");
+    st.innerHTML = m.emergency_stop ? '<span class="dot red"></span>비상 손절 중 · 신규 감사 쉼'
+      : '<span class="dot"></span>SPY 60일 고점 대비 ' + MD.pct(m.spy_from_60d_high_pct) + " · VIX " + (m.vix != null ? m.vix : "—");
+    document.getElementById("today-h").textContent = "미국 " + MD.md(d.signal_date) + " 신호 감사";
+    document.getElementById("today-sub").textContent = d.judged_at ? "감사 " + d.judged_at + " · 갱신 " + d.updated : "갱신 " + d.updated;
+    var items = (d.rechecks || []).concat(d.items || []);
+    document.getElementById("cards").innerHTML = items.length ? items.map(card).join("")
+      : '<p class="empty" style="grid-column:1/-1">이날은 새로 80점을 넘은 종목도, 재감사할 관망 종목도 없어요.</p>';
+    var w = d.watching || [];
+    var ws = document.getElementById("watch-sec");
+    if (w.length) {
+      ws.hidden = false;
+      document.getElementById("watch").innerHTML = w.map(function (o) {
+        return '<li><span class="t">' + MD.md(o.signal_date) + ' 신호</span><span class="sym">' + E(o.sym) + '</span><span class="muted" style="font-size:14px">' + E(o.worst || "") + '</span><span class="pnl" style="font-weight:500;font-size:13px">' + MD.md(o.next_review) + " 재감사 (" + (o.review_no + 1) + "/2회차)</span></li>";
+      }).join("");
+    }
+  }).catch(function () {
+    document.getElementById("cards").innerHTML = '<p class="empty" style="grid-column:1/-1">아직 데이터가 없어요.</p>';
+    document.getElementById("st").innerHTML = '<span class="dot gray"></span>준비 중';
+  });
+  MD.json("data/ai/ledger.json").then(function (d) {
+    var g = d.groups || [];
+    function cell(o, h) { return o["n" + h] ? MD.pct(o["r" + h]) + ' <span class="muted">(' + MD.pct(o["ex" + h]) + ")</span>" : "—"; }
+    document.getElementById("groups").innerHTML = '<thead><tr><th>묶음</th><th class="n">신호</th><th class="n">20일 평균 (초과)</th><th class="n">60일 평균 (초과)</th><th class="n">60일 결과 나온 건</th></tr></thead><tbody>' +
+      g.map(function (o) { return "<tr><td>" + E(o.name) + '</td><td class="n">' + o.n + '</td><td class="n">' + cell(o, 20) + '</td><td class="n">' + cell(o, 60) + '</td><td class="n">' + o.n60 + "</td></tr>"; }).join("") + "</tbody>";
+    var c = d.counts || {};
+    document.getElementById("verdict-note").textContent = (c.since ? MD.md(c.since) + "부터 " : "") + "신호 " + (c.signals || 0) + "건 · AI 감사 " + (c.judged || 0) + "건 (통과 " + (c.pass || 0) + ", 브레이크 " + (c.brake || 0) + ", 관망 중 " + (c.watch || 0) + "). 효과 판정은 60일 결과가 통과·브레이크 각 20건 이상 쌓인 뒤에 해요.";
+    var r = d.rows || [];
+    var V = { pass: "통과", brake: "브레이크", watch: "관망", none: "—", error: "오류", skipped: "건너뜀" };
+    document.getElementById("rows").innerHTML = r.length ? '<thead><tr><th>신호일</th><th>종목</th><th>감사</th><th class="n">진입가</th><th class="n">20일</th><th class="n">60일</th></tr></thead><tbody>' +
+      r.map(function (o) {
+        var v = V[o.verdict] || "—"; if (o.verdict === "pass" && o.weight != null) v += " " + o.weight;
+        if (o.verdict === "watch" && o.next_review) v += " (" + MD.md(o.next_review) + ")";
+        return '<tr><td class="num">' + MD.md(o.date) + '</td><td class="num"><b>' + E(o.sym) + "</b></td><td>" + v + '</td><td class="n">' + (o.entry != null ? "$" + o.entry.toFixed(2) : "—") + '</td><td class="n">' + MD.pct(o.r20) + '</td><td class="n">' + MD.pct(o.r60) + "</td></tr>";
+      }).join("") + "</tbody>" : '<tbody><tr><td class="empty">아직 기록이 없어요.</td></tr></tbody>';
+  }).catch(function () {
+    document.getElementById("groups").innerHTML = '<tbody><tr><td class="empty">아직 기록이 없어요.</td></tr></tbody>';
+    document.getElementById("rows").innerHTML = '<tbody><tr><td class="empty">아직 기록이 없어요.</td></tr></tbody>';
+  });
+})();
+</script>
+</body>
+</html>

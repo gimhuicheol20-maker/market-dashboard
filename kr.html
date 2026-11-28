@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>국장 AI · 시스템 트레이딩</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@700;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f1b2d">
+<link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="시스템 트레이딩">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<script src="assets/site.js"></script>
+<style>
+.verdict{font-size:13px}
+.ev{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.ev li{display:flex;gap:8px;align-items:flex-start;font-size:14px;line-height:1.5}
+.ev li .pill{flex:none;font-size:11px;padding:2px 8px}
+.why{font-size:14px;line-height:1.65;border-top:1px dashed var(--line);padding-top:12px}
+.ovr{font-size:12px;color:var(--bad);font-weight:700}
+.tbl-wrap{overflow-x:auto}
+table.t td.n,table.t th.n{text-align:right;font-family:var(--mono);padding-left:12px}
+.flow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;font-size:13px}
+.flow div{display:flex;justify-content:space-between;gap:8px}
+.acct{display:flex;flex-direction:column;gap:6px}
+.acct b.big{font-size:26px;font-family:var(--mono)}
+</style>
+</head>
+<body>
+<main class="page" style="gap:32px">
+
+<section class="hero">
+  <div class="txt">
+    <span class="eyebrow">KOSPI 200 · 추세 3요인 · AI 재료 감사</span>
+    <h1 class="h1" style="font-size:clamp(28px,7vw,40px)">국장 AI 재료 감사</h1>
+    <p class="lede">추세가 강한 종목은 규칙이 고르고, AI는 그 뒤에 큰 재료가 있는지 감사해요. 국장 추세 신호의 수익은 거의 전부 소수의 대박 종목에서 나와서, 재료가 큰 종목 3개만 들고 길게 태워요.</p>
+  </div>
+  <div class="btns"><span class="status" id="st"><span class="dot gray"></span>불러오는 중</span></div>
+</section>
+
+<section class="sec" aria-label="계좌">
+  <div class="sec-h" style="flex-direction:column;align-items:flex-start"><h2 class="h2">장부 계좌</h2>
+    <p id="acct-sub">실제 주문 없이 같은 규칙(3종목, 최고 종가 −3ATR 청산, 코스피 200일선 아래면 신규 금지)으로 후보만 달리해 기록해요.</p></div>
+  <div class="grid" style="--min:220px" id="accts"><p class="loading">불러오는 중…</p></div>
+</section>
+
+<section class="sec" aria-label="오늘 감사">
+  <div class="sec-h"><h2 class="h2" id="today-h">오늘 감사</h2><p id="today-sub"></p></div>
+  <div class="grid" style="--min:320px" id="cards"><p class="loading">불러오는 중…</p></div>
+</section>
+
+<section class="sec" aria-label="신호 성적">
+  <div class="sec-h" style="flex-direction:column;align-items:flex-start"><h2 class="h2">신호 성적</h2>
+    <p>모든 신호를 다음 날 시가에 산 것으로 기록해요. 편도 0.25% 비용을 뺀 값이고, 괄호는 같은 기간 코스피 대비예요.</p></div>
+  <div class="card"><div class="tbl-wrap"><table class="t" id="groups"><tbody><tr><td class="loading">불러오는 중…</td></tr></tbody></table></div>
+    <p class="note" id="count-note"></p></div>
+</section>
+
+<section class="sec" aria-label="최근 기록">
+  <h2 class="h2">최근 기록</h2>
+  <div class="card"><div class="tbl-wrap"><table class="t" id="rows"><tbody><tr><td class="loading">불러오는 중…</td></tr></tbody></table></div></div>
+</section>
+
+<section class="sec" aria-label="하루 흐름">
+  <h2 class="h2">하루 흐름 <small class="muted" style="font-size:14px;font-weight:500">한국 시간</small></h2>
+  <ol class="steps">
+    <li><span class="n">STEP 1</span><span class="tm">19:00</span><h3>신호</h3><p>장 마감 후 주간 RSI·코스피 대비 상대강도·50일선 기울기로 KOSPI 200 순위를 매겨요. 상위 10%에 처음 들어온 종목이 후보예요.</p></li>
+    <li><span class="n">STEP 2</span><span class="tm">19:00</span><h3>공시·수급</h3><p>DART에서 직전 20거래일 공시를 읽어 큰 계약·실적 급증·자사주를 표시하고, 외국인·기관 수급을 붙여요.</p></li>
+    <li><span class="n">STEP 3</span><span class="tm">07:30</span><h3>재료 감사</h3><p>AI가 뉴스·리포트까지 찾아보고 재료가 여러 분기 이익을 바꿀 만큼 큰지 판단해요. 큰 재료만 통과예요.</p></li>
+    <li><span class="n">STEP 4</span><span class="tm">09:00</span><h3>가상 진입</h3><p>통과·브레이크 모두 시가로 장부에 기록하고, 계좌는 점수 높은 3종목까지만 담아요.</p></li>
+  </ol>
+</section>
+
+<section class="rules" aria-label="유의사항">
+  <div><b>실험 중이에요</b><span>과거 검증(2010~2026)에서 숫자 기준 호재 + 3종목 + 200일선 규칙은 샤프 0.80, 연 15.8%, MDD −26%였어요. AI 판정이 이보다 나은지는 장부가 쌓여야 알 수 있어요.</span></div>
+  <div><b>규칙이 우선이에요</b><span>코스피가 200일선 아래면 새로 사지 않아요. 판정은 계속 기록해요.</span></div>
+  <div><b>AI도 틀려요</b><span>재료 판단은 AI가 웹 검색으로 정리한 거라 사실과 다를 수 있어요. 원문 공시·뉴스를 직접 확인하세요.</span></div>
+  <div><b>판단과 책임은 본인에게</b><span>이 페이지는 투자 권유가 아닌 실험 기록이에요.</span></div>
+</section>
+</main>
+
+<script>
+(function () {
+  var E = MD.esc;
+  var MAT = { big: ["green", "큰 재료"], normal: ["amber", "보통"], none: ["", "없음"] };
+  function vpill(it) {
+    var v = it.verdict;
+    if (v === "pass") return '<span class="pill green verdict">통과 · 큰 재료</span>';
+    if (v === "brake") return '<span class="pill red verdict">브레이크' + (it.material && MAT[it.material] ? " · " + MAT[it.material][1] : "") + "</span>";
+    if (v === "pending") return '<span class="pill verdict">07:30 감사 예정</span>';
+    if (v === "none") return '<span class="pill verdict">감사 없음</span>';
+    return '<span class="pill verdict">' + E(v || "—") + "</span>";
+  }
+  var KIND = { contract: "blue", earnings: "blue", buyback: "blue", dilution: "red" };
+  function events(it) {
+    var ev = it.events || [];
+    var head = it.rule_good ? '<span class="pill green">규칙 호재</span>' : it.rule_bad ? '<span class="pill red">규칙 악재</span>' : '<span class="pill">숫자 호재 없음</span>';
+    return '<div><p class="sub" style="margin-bottom:8px">DART 공시 (직전 20거래일) ' + head + "</p>" +
+      (ev.length ? '<ul class="ev">' + ev.map(function (e) {
+        return '<li><span class="pill ' + (KIND[e.kind] || "") + '">' + MD.md(e.date) + "</span><span>" + E(e.label) + "</span></li>";
+      }).join("") + "</ul>" : '<p class="note">해당 공시 없음</p>') + "</div>";
+  }
+  function flow(f) {
+    if (!f) return "";
+    function c(v) { return v == null ? "—" : MD.pct(v); }
+    return '<div><p class="sub" style="margin-bottom:6px">수급 (거래량 대비 순매수)</p><div class="flow">' +
+      "<div><span>외국인 5일</span><b>" + c(f.frgn5) + "</b></div><div><span>기관 5일</span><b>" + c(f.organ5) + "</b></div>" +
+      "<div><span>외국인 20일</span><b>" + c(f.frgn20) + "</b></div><div><span>기관 20일</span><b>" + c(f.organ20) + "</b></div></div></div>";
+  }
+  function card(it) {
+    return '<article class="card"><div class="top"><h3><span class="num">' + E(it.name) + '</span> <small>' + E(it.code) + "</small></h3>" + vpill(it) + "</div>" +
+      '<div class="metrics"><div class="metric"><span>점수</span><b>' + (it.score != null ? (it.score * 100).toFixed(0) : "—") + '</b></div><div class="metric"><span>주간 RSI</span><b>' + (it.wrsi != null ? it.wrsi.toFixed(0) : "—") + '</b></div><div class="metric"><span>코스피 대비 60일</span><b>' + MD.pct(it.rs60_pct) + "</b></div></div>" +
+      (it.catalyst ? '<p style="font-size:14px"><b>재료</b> · ' + E(it.catalyst) + "</p>" : "") +
+      events(it) + flow(it.flow) +
+      (it.reason ? '<p class="why">' + E(it.reason) + (it.rule_override ? '<br><span class="ovr">규칙 보정: ' + E(it.rule_override) + "</span>" : "") + "</p>" : "") +
+      "</article>";
+  }
+  MD.json("data/kr/latest.json").then(function (d) {
+    var m = d.market || {};
+    var f = m.flow || {};
+    document.getElementById("st").innerHTML = (m.above_ma200 ? '<span class="dot"></span>코스피 200일선 위 · 신규 가능' : '<span class="dot red"></span>코스피 200일선 아래 · 신규 금지') +
+      " · 200일선 대비 " + MD.pct(m.kospi_vs_ma200_pct) + (f.frgn20 != null ? " · 시장 외국인 20일 " + MD.pct(f.frgn20, 2) : "");
+    document.getElementById("today-h").textContent = MD.md(d.signal_date) + " 신호 감사";
+    document.getElementById("today-sub").textContent = d.judged_at ? "감사 " + d.judged_at + " · 갱신 " + d.updated : "갱신 " + d.updated;
+    var items = d.items || [];
+    document.getElementById("cards").innerHTML = items.length ? items.map(card).join("")
+      : '<p class="empty" style="grid-column:1/-1">이날은 상위 10%에 새로 들어온 종목이 없어요.</p>';
+  }).catch(function () {
+    document.getElementById("cards").innerHTML = '<p class="empty" style="grid-column:1/-1">아직 데이터가 없어요.</p>';
+    document.getElementById("st").innerHTML = '<span class="dot gray"></span>준비 중';
+  });
+  MD.json("data/kr/ledger.json").then(function (d) {
+    var A = d.accounts || {};
+    var order = ["ai", "rule", "all", "kospi"];
+    document.getElementById("accts").innerHTML = order.filter(function (k) { return A[k]; }).map(function (k) {
+      var a = A[k];
+      var hold = (a.holdings || []).map(function (h) { return E(h.name) + " " + MD.pct(h.ret); }).join(" · ");
+      return '<div class="card acct"><p class="sub">' + E(a.title) + '</p><b class="big">' + MD.pct(a.ret) + '</b><span class="muted" style="font-size:13px">MDD ' + MD.pct(a.mdd) +
+        (a.n_trades != null ? " · 거래 " + a.n_trades + "건" : "") + "</span>" + (k !== "kospi" ? '<span style="font-size:13px">' + (hold || "보유 없음") + "</span>" : "") + "</div>";
+    }).join("") || '<p class="empty">아직 기록이 없어요.</p>';
+    if (d.start) document.getElementById("acct-sub").textContent += " " + MD.md(d.start) + "부터 기록, 가격 " + MD.md(d.last_price_date) + " 기준.";
+    var g = d.groups || [];
+    function cell(o, h) { return o["n" + h] ? MD.pct(o["r" + h]) + ' <span class="muted">(' + MD.pct(o["ex" + h]) + ")</span>" : "—"; }
+    document.getElementById("groups").innerHTML = g.length ? '<thead><tr><th>묶음</th><th class="n">신호</th><th class="n">20일 (코스피 대비)</th><th class="n">60일 (코스피 대비)</th></tr></thead><tbody>' +
+      g.map(function (o) { return "<tr><td>" + E(o.name) + '</td><td class="n">' + o.n + '</td><td class="n">' + cell(o, 20) + '</td><td class="n">' + cell(o, 60) + "</td></tr>"; }).join("") + "</tbody>"
+      : '<tbody><tr><td class="empty">아직 기록이 없어요.</td></tr></tbody>';
+    var c = d.counts || {};
+    document.getElementById("count-note").textContent = "신호 " + (c.signals || 0) + "건 · 규칙 호재 " + (c.rule_good || 0) + "건 · AI 감사 " + (c.judged || 0) + "건 (통과 " + (c.pass || 0) + ", 브레이크 " + (c.brake || 0) + ").";
+    var r = d.rows || [];
+    var V = { pass: "통과", brake: "브레이크", none: "—", error: "오류", skipped: "건너뜀" };
+    document.getElementById("rows").innerHTML = r.length ? '<thead><tr><th>신호일</th><th>종목</th><th>규칙 호재</th><th>AI</th><th class="n">진입가</th><th class="n">20일</th><th class="n">60일</th></tr></thead><tbody>' +
+      r.map(function (o) {
+        var v = V[o.verdict] || "—"; if (o.material && MAT[o.material]) v += " · " + MAT[o.material][1];
+        return '<tr><td class="num">' + MD.md(o.date) + "</td><td><b>" + E(o.name) + "</b></td><td>" + (o.rule_good ? "호재" : "—") + "</td><td>" + v + '</td><td class="n">' + (o.entry != null ? o.entry.toLocaleString() + "원" : "—") + '</td><td class="n">' + MD.pct(o.r20) + '</td><td class="n">' + MD.pct(o.r60) + "</td></tr>";
+      }).join("") + "</tbody>" : '<tbody><tr><td class="empty">아직 기록이 없어요.</td></tr></tbody>';
+  }).catch(function () {
+    document.getElementById("accts").innerHTML = '<p class="empty">아직 기록이 없어요.</p>';
+    document.getElementById("groups").innerHTML = '<tbody><tr><td class="empty">아직 기록이 없어요.</td></tr></tbody>';
+    document.getElementById("rows").innerHTML = '<tbody><tr><td class="empty">아직 기록이 없어요.</td></tr></tbody>';
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>시장 · 시스템 트레이딩</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@700;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f1b2d">
+<link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="시스템 트레이딩">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<script src="assets/site.js"></script>
+</head>
+<body>
+<main class="page">
+
+<section class="hero">
+  <div class="txt">
+    <span class="eyebrow" id="asof">불러오는 중…</span>
+    <h1 class="h1" id="headline">오늘의 시장</h1>
+    <p class="lede" id="summary"></p>
+  </div>
+  <div class="status"><span class="dot" id="builtDot"></span><span id="built">갱신 시각 확인 중</span></div>
+</section>
+
+<section class="grid" style="--min:340px" aria-label="지수 매력 점수" id="indexes">
+  <p class="loading">매력 점수를 불러오는 중…</p>
+</section>
+
+<section class="card dark lg" aria-label="개별주 관심 종목" style="flex-direction:row;flex-wrap:wrap;gap:32px">
+  <div style="flex:1 1 300px;display:flex;flex-direction:column;gap:16px">
+    <h2 style="font-size:18px">오늘 관심 둘 만한 개별주</h2>
+    <div style="display:flex;align-items:baseline;gap:10px"><span class="big" style="font-size:clamp(56px,15vw,72px)" id="nStrong">–</span><span style="color:var(--on-dark-muted)">개 강한 신호 (90+)</span></div>
+    <div style="display:flex;align-items:baseline;gap:10px"><span class="big" style="font-size:36px;color:var(--gold)" id="nWatch">–</span><span style="color:var(--on-dark-muted)">개 관찰 (80~90)</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div class="stack" style="height:10px" id="ratio" role="img"></div>
+      <span style="font-size:13px;color:var(--on-dark-muted)" id="universe"></span>
+    </div>
+  </div>
+  <div style="flex:1 1 240px;display:flex;flex-direction:column;gap:12px">
+    <h3 style="font-size:14px;font-weight:500;color:var(--on-dark-muted)">80점 이상 섹터</h3>
+    <div id="sectors" style="display:flex;flex-direction:column;gap:10px;font-size:14px"></div>
+  </div>
+  <div style="flex:1 1 240px;display:flex;flex-direction:column;gap:12px">
+    <h3 style="font-size:14px;font-weight:500;color:var(--on-dark-muted)">점수 상위</h3>
+    <div id="top" class="chips"></div>
+    <a class="btn light" href="stocks.html" style="margin-top:auto;align-self:stretch">전체 목록 보기 →</a>
+  </div>
+</section>
+
+<p class="foot">투자 판단을 돕는 참고 자료예요. 과거 성과가 미래 수익을 보장하지 않아요. 점수 계산식은 공개하지 않아요.</p>
+</main>
+
+<script>
+(function () {
+  var STATS = { // 과거 90+ 이후 12개월 (백테스트, 매력 점수 페이지와 같은 숫자)
+    qqq: { r12: 18.4, win: 74 },
+    soxx: { r12: 52.3, win: 97 }
+  };
+  var DAYS = ["일", "월", "화", "수", "목", "금", "토"];
+
+  function spark(hist) {
+    var h = hist.slice(-60), n = h.length;
+    if (n < 2) return "";
+    var pts = h.map(function (p, i) { return (i * 560 / (n - 1)).toFixed(1) + "," + (100 - p.score).toFixed(1); }).join(" ");
+    var lo = Math.round(Math.min.apply(null, h.map(function (p) { return p.score; })));
+    var hi = Math.round(Math.max.apply(null, h.map(function (p) { return p.score; })));
+    return '<figure style="margin:0;display:flex;flex-direction:column;gap:6px">' +
+      '<svg class="spark" viewBox="0 0 560 100" preserveAspectRatio="none" role="img" aria-label="최근 ' + n + '거래일 점수 추이, 최저 ' + lo + '점 최고 ' + hi + '점">' +
+      '<rect x="0" y="0" width="560" height="10" fill="#e3e8fb"></rect>' +
+      '<line x1="0" y1="10" x2="560" y2="10" stroke="#2a45d8" stroke-width="1" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"></line>' +
+      '<polyline fill="none" stroke="#0f1b2d" stroke-width="2" vector-effect="non-scaling-stroke" points="' + pts + '"></polyline></svg>' +
+      '<figcaption class="scale" style="font-family:var(--sans)"><span>' + MD.md(h[0].date) + '</span><span>최근 ' + n + '거래일 · 점선 = 90점</span><span>' + MD.md(h[n - 1].date) + "</span></figcaption></figure>";
+  }
+
+  function last90(hist) {
+    for (var i = hist.length - 1; i >= 0; i--) if (hist[i].score >= 90) return hist[i];
+    return null;
+  }
+
+  function card(ix) {
+    var h = ix.history || [], prev = h.length > 1 ? h[h.length - 2].score : null;
+    var d = prev === null ? null : ix.score - prev;
+    var zone = ix.score >= 90, label = ix.key.toUpperCase();
+    var band = ix.score >= 90 ? "90+ 매력 구간" : ix.score >= 80 ? "80점대 · 참고" : ix.score >= 70 ? "70점대 · 참고" : "관망";
+    var heat = ix.heat || {};
+    var heatCls = heat.zone === "hot" ? "red" : heat.zone === "warn" ? "amber" : "green";
+    var s = STATS[ix.key] || {};
+    var l90 = last90(h);
+    var tile2 = ix.key === "qqq"
+      ? '<div class="tile"><span>과거 90+ 이후 12개월</span><b>평균 ' + MD.pct(s.r12) + ' <small>승률 ' + s.win + '%</small></b></div>'
+      : '<div class="tile"><span>최근 12개월 안 90+</span><b>' + (l90 ? '있음 <small>' + MD.md(l90.date) + ' · ' + l90.score.toFixed(1) + "</small>" : "없음") + "</b></div>";
+    return '<article class="card lg">' +
+      '<div class="top"><h2 style="font-size:18px">' + label + ' 매력 점수</h2><span class="pill ' + (zone ? "blue" : "") + '">' + band + "</span></div>" +
+      '<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><span class="big' + (zone ? " blue" : "") + '" style="font-size:clamp(64px,18vw,88px);letter-spacing:-3px">' + ix.score.toFixed(1) + "</span>" +
+      '<span class="muted">' + (prev === null ? "" : "전일 " + prev.toFixed(1) + ' · <span class="' + (d < 0 ? "red" : "blue") + '">' + MD.signed(d) + "</span>") + "</span></div>" +
+      '<div style="display:flex;flex-direction:column;gap:6px"><div class="bar"><i style="width:' + Math.max(0, Math.min(100, ix.score)) + "%;background:" + (zone ? "var(--accent)" : "var(--muted)") + '"></i><em style="left:90%"></em></div>' +
+      '<div class="scale"><span>0</span><span>70</span><span>80</span><span>90 ▲</span></div></div>' +
+      spark(h) +
+      '<div class="grid" style="--min:150px;gap:12px">' +
+      '<div class="tile"><span>과열 온도계 (월간 RSI)</span><b>' + (heat.value !== undefined ? heat.value.toFixed(1) : "—") + ' <small class="' + heatCls + '">' + (heat.label || "") + "</small></b></div>" + tile2 + "</div>" +
+      (ix.note ? '<p class="note" style="font-size:14px">' + MD.esc(ix.note) + "</p>" : "") +
+      "</article>";
+  }
+
+  MD.json("data/singularity.json").then(function (sg) {
+    var ix = sg.indexes || [];
+    document.getElementById("indexes").innerHTML = ix.map(card).join("");
+    var q = ix.filter(function (x) { return x.key === "qqq"; })[0], s = ix.filter(function (x) { return x.key === "soxx"; })[0];
+    var date = (q || s || {}).date;
+    if (date) {
+      var dd = new Date(date + "T00:00:00");
+      document.getElementById("asof").textContent = date.replace(/-/g, ".") + " (" + DAYS[dd.getDay()] + ") 미국장 마감 기준";
+    }
+    var inZone = ix.filter(function (x) { return x.score >= 90; }).map(function (x) { return x.key.toUpperCase(); });
+    document.getElementById("headline").textContent = inZone.length ? inZone.join("·") + " 매력 구간 진입" : "매력 구간 대기 중";
+    document.getElementById("summary").textContent = ix.map(function (x) { return x.key.toUpperCase() + " " + x.score.toFixed(1) + "점"; }).join(" · ");
+  }).catch(function () {
+    document.getElementById("indexes").innerHTML = '<p class="loading">매력 점수를 불러오지 못했어요.</p>';
+  });
+
+  MD.json("data/build.json").then(function (b) {
+    document.getElementById("built").textContent = (b.built || "").replace(/^\d{4}-/, "").replace("-", ".") + " 갱신" + (b.singularity_stale ? " · 이전 결과" : "");
+    if (b.singularity_stale) document.getElementById("builtDot").className = "dot amber";
+  }).catch(function () {});
+
+  MD.json("data/attract/index.json").then(function (a) {
+    var list = a.stocks || [], entry = a.entry || 90, watch = a.watch || 80;
+    var strong = list.filter(function (x) { return x.score >= entry; });
+    var mid = list.filter(function (x) { return x.score >= watch && x.score < entry; });
+    var n = list.length || 1;
+    document.getElementById("nStrong").textContent = strong.length;
+    document.getElementById("nWatch").textContent = "+" + mid.length;
+    var r = document.getElementById("ratio");
+    r.innerHTML = '<i style="width:' + (strong.length / n * 100).toFixed(1) + '%;background:#8fa3ff"></i><i style="width:' + (mid.length / n * 100).toFixed(1) + '%;background:#f2c46b"></i>';
+    r.setAttribute("aria-label", list.length + "종목 중 강한 신호 " + strong.length + "개, 관찰 " + mid.length + "개");
+    document.getElementById("universe").innerHTML = "S&amp;P 500 + 나스닥 100 · " + list.length + "종목" + (a.market ? ' · 시장 상태 <b style="color:var(--on-dark)">' + MD.esc(a.market) + "</b>" : "") + (a.stale ? " · 이전 결과" : "");
+    var cnt = {};
+    strong.concat(mid).forEach(function (x) { cnt[x.sector] = (cnt[x.sector] || 0) + 1; });
+    var secs = Object.keys(cnt).sort(function (x, y) { return cnt[y] - cnt[x]; }).slice(0, 5);
+    var mx = secs.length ? cnt[secs[0]] : 1;
+    document.getElementById("sectors").innerHTML = secs.map(function (k) {
+      return '<div style="display:grid;grid-template-columns:84px 1fr 28px;align-items:center;gap:10px"><span>' + MD.esc(k) + '</span><div style="height:8px;border-radius:4px;background:#8fa3ff;width:' + (cnt[k] / mx * 100).toFixed(0) + '%"></div><span class="num" style="text-align:right">' + cnt[k] + "</span></div>";
+    }).join("") || '<span style="color:var(--on-dark-muted)">없음</span>';
+    var top = list.slice().sort(function (x, y) { return y.score - x.score; }).slice(0, 6);
+    document.getElementById("top").innerHTML = top.map(function (x) {
+      return '<a href="stocks.html#' + encodeURIComponent(x.ticker) + '" style="padding:8px 12px;border-radius:10px;background:var(--dark-2);color:var(--on-dark);text-decoration:none;font-size:14px"><b>' + MD.esc(x.ticker) + '</b> <span class="num" style="color:#8fa3ff">' + x.score.toFixed(1) + "</span></a>";
+    }).join("");
+  }).catch(function () {
+    document.getElementById("universe").textContent = "개별주 데이터를 불러오지 못했어요.";
+  });
+})();
+</script>
+</body>
+</html>
